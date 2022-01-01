@@ -5,6 +5,8 @@ import { pick } from 'contentlayer/client'
 import Meta from 'components/Shared/Meta'
 import { H1, H3 } from 'components/Shared/Titles'
 import SearchBar from 'components/Blog/SearchBar'
+import BlogCardSimple from 'components/Blog/BlogCardSimple'
+import Image from 'next/image'
 import BlogCard from 'components/Blog/BlogCard'
 
 const BlogPage: React.FC<InferGetStaticPropsType<typeof getStaticProps>> = ({
@@ -42,7 +44,9 @@ const BlogPage: React.FC<InferGetStaticPropsType<typeof getStaticProps>> = ({
 
 export function getStaticProps() {
   const posts = allBlogs
-    .map((post) => pick(post, ['slug', 'title', 'summary', 'publishedAt']))
+    .map((post) =>
+      pick(post, ['slug', 'title', 'summary', 'publishedAt', 'categories'])
+    )
     .sort(
       (a, b) =>
         Number(new Date(b.publishedAt)) - Number(new Date(a.publishedAt))

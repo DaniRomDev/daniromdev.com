@@ -19,6 +19,11 @@ module.exports = withContentlayer()({
     eslint: {
         ignoreDuringBuilds: true,
     },
+    images: {
+        domains: [
+            'images.unsplash.com',
+        ]
+    },
     //https://nextjs.org/docs/advanced-features/security-headers
     async headers() {
         return [

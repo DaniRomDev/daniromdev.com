@@ -30,7 +30,7 @@ const NavItem: React.FC<NavigationRoute> = ({ href, text }) => {
 
 const NavMenu: React.FC<{ items: NavigationRoute[] }> = ({ items = [] }) => {
   return (
-    <nav className="flex justify-between px-8 md:px-0 sm:pb-16 font-serif">
+    <nav className="flex justify-between px-8 md:px-0 pb-16 font-serif">
       <div className="ml-[-0.60rem]">
         <MobileMenu items={items} />
         {items.map(({ href, text }) => (

@@ -1,24 +1,42 @@
 import { Blog } from '.contentlayer/types'
+import { EyeIcon } from 'components/Shared/Icons'
 import { H4 } from 'components/Shared/Titles'
 import Link from 'next/link'
+import CategoryBadge from './CategoryBadge'
 
 const BlogCard: React.FC<{
-  post: Pick<Blog, 'slug' | 'title' | 'summary' | 'publishedAt'>
+  post: Pick<Blog, 'slug' | 'title' | 'summary' | 'publishedAt' | 'categories'>
 }> = ({ post }) => {
   return (
-    <Link href={`/blog/${post.slug}`}>
-      <a className="w-full">
-        <div className="w-full mb-8">
-          <div className="flex flex-col justify-between md:flex-row">
-            <H4>{post.title}</H4>
-            <p className="w-32 mb-4 text-left text-gray-500 md:text-right md:mb-0">
-              0 views
-            </p>
-          </div>
-          <p className="text-gray-600 dark:text-gray-400">{post.summary}</p>
+    <div className="max-w-4xl px-10 py-6 mx-auto bg-white rounded-lg shadow-md">
+      <div className="flex items-center justify-between">
+        <span className="font-light text-gray-600">{post.publishedAt}</span>
+        <div>
+          {post.categories.split(',').map((category: string) => (
+            <CategoryBadge key={`${category}-${post.slug}`} color="blue">
+              {category.charAt(0).toUpperCase() + category.slice(1)}
+            </CategoryBadge>
+          ))}
         </div>
-      </a>
-    </Link>
+      </div>
+      <div className="mt-2">
+        <a
+          href={`/blog/${post.slug}`}
+          className="text-2xl font-bold text-gray-700 hover:underline"
+        >
+          {post.title}
+        </a>
+        <p className="mt-2 text-gray-600">{post.summary}</p>
+      </div>
+      <div className="flex items-center justify-between mt-4">
+        <Link href={`/blog/${post.slug}`}>
+          <a className="text-blue-500">Read more</a>
+        </Link>
+        <div className="flex justify-around">
+          <EyeIcon /> <span className="ml-1">0</span>
+        </div>
+      </div>
+    </div>
   )
 }
 
