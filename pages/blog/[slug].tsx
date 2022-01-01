@@ -10,6 +10,7 @@ const Post: React.FC<{ post: Blog }> = ({ post }) => {
   return (
     <BlogPost post={post}>
       <Component />
+      {/*Remember for DaniRomero --> you can pass custom components to render on markdown as <Component components={...} */}
     </BlogPost>
   )
 }
@@ -22,7 +23,7 @@ export const getStaticPaths: GetStaticPaths = async () => {
 }
 
 export const getStaticProps: GetStaticProps = async ({ params }) => {
-  const post = allBlogs.find((post) => post.slug === params.slug)
+  const post = allBlogs.find((post) => post.slug === params?.slug)
 
   return { props: { post } }
 }
