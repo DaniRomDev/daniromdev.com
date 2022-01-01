@@ -2,9 +2,9 @@ import cn from 'classnames'
 import Link from 'next/link'
 import useDelayedRender from 'use-delayed-render'
 import { useState, useEffect } from 'react'
-import { NavigationRoute } from '../../config'
-import { CrossIcon, MenuIcon } from '../Shared/Icons'
-import styles from '../../styles/mobile-menu.module.css'
+import { NavigationRoute } from 'config'
+import { CrossIcon, MenuIcon } from 'components/Shared/Icons'
+import styles from 'styles/mobile-menu.module.css'
 
 const MobileMenu: React.FC<{ items: NavigationRoute[] }> = ({ items = [] }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
@@ -46,7 +46,7 @@ const MobileMenu: React.FC<{ items: NavigationRoute[] }> = ({ items = [] }) => {
         <ul
           className={cn(
             styles.menu,
-            'flex flex-col absolute bg-gray-100 dark:bg-gray-900',
+            'flex flex-col bg-gray-100 dark:bg-gray-900 absolute',
             isMenuRendered && styles.menuRendered
           )}
         >

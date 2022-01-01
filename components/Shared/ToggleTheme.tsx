@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useTheme } from 'next-themes'
-import { MoonIcon, SunIcon } from './Icons'
+import { MoonIcon, SunIcon } from 'components/Shared/Icons'
 
 const ToggleTheme = () => {
   const [mounted, setMounted] = useState(false)

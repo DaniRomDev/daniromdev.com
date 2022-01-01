@@ -4,9 +4,9 @@ import { useState, useEffect } from 'react'
 import { useTheme } from 'next-themes'
 import NextLink from 'next/link'
 import cn from 'classnames'
-import MobileMenu from './MobileMenu'
-import { NavigationRoute } from '../../config'
-import ToggleTheme from '../Shared/ToggleTheme'
+import MobileMenu from 'components/Menus/MobileMenu'
+import { NavigationRoute } from 'config'
+import ToggleTheme from 'components/Shared/ToggleTheme'
 
 const NavItem: React.FC<NavigationRoute> = ({ href, text }) => {
   const router = useRouter()
@@ -30,7 +30,7 @@ const NavItem: React.FC<NavigationRoute> = ({ href, text }) => {
 
 const NavMenu: React.FC<{ items: NavigationRoute[] }> = ({ items = [] }) => {
   return (
-    <nav className="flex items-center justify-between w-full relative max-w-3xl border-gray-200 dark:border-gray-700 mx-auto pt-8 pb-8 sm:pb-16  text-gray-900 bg-gray-50  dark:bg-gray-900 bg-opacity-60 dark:text-gray-100">
+    <nav className="flex justify-between px-8 md:px-0 sm:pb-16 font-serif">
       <div className="ml-[-0.60rem]">
         <MobileMenu items={items} />
         {items.map(({ href, text }) => (

@@ -1,10 +1,12 @@
+const { withContentlayer } = require('next-contentlayer');
+
 /** @type {import('next').NextConfig} */
 
 // https://securityheaders.com
 const ContentSecurityPolicy = `
   default-src 'self';
-  script-src 'self' 'unsafe-eval' 'unsafe-inline' *.youtube.com *.twitter.com cdn.usefathom.com;
-  child-src *.youtube.com *.google.com *.twitter.com;
+  script-src 'self' 'unsafe-eval' 'unsafe-inline' *.youtube.com cdn.usefathom.com;
+  child-src *.youtube.com *.google.com;
   style-src 'self' 'unsafe-inline' *.googleapis.com;
   img-src * blob: data:;
   media-src 'none';
@@ -12,7 +14,7 @@ const ContentSecurityPolicy = `
   font-src 'self';
 `
 
-module.exports = {
+module.exports = withContentlayer()({
     reactStrictMode: true,
     eslint: {
         ignoreDuringBuilds: true,
@@ -64,4 +66,4 @@ module.exports = {
             },
         ]
     },
-}
+})

@@ -6,7 +6,7 @@ export type MetaConfig = {
     image: string;
     type?: string
     title?: string
-    date?: Date
+    date?: string
 }
 
 export type NavigationRoute = {
