@@ -4,7 +4,7 @@ import Image from 'next/image'
 import BasicLayout from '../layouts/BasicLayout'
 
 const Home: NextPage = () => {
-  return <BasicLayout></BasicLayout>
+  return <BasicLayout>content</BasicLayout>
 }
 
 export default Home
