@@ -9,18 +9,35 @@ export type MetaConfig = {
     date?: Date
 }
 
-interface Configuration {
-    meta: MetaConfig
+export type NavigationRoute = {
+    href: string;
+    text: string;
 }
+
+export type NavigationConfig = {
+    routes: NavigationRoute[]
+}
+
 
 const config = {
     meta: {
-        url: 'https://daniromdev.com',
+        url: process.env.NEXT_PUBLIC_APP_URL,
         sitename: 'Daniel Romero',
         description: `Javascript lover, traveller and sometimes software engineer`,
-        image: 'https://daniromdev.com/static/images/banner.png',
+        image: `${process.env.NEXT_PUBLIC_APP_URL}/static/images/banner.png`,
         type: 'website',
-        title: "The blog for software traveller engineers"
+        title: "The blog for programmers that like travel and computer stuff"
+    },
+    navigation: {
+        routes: [{
+            href: '/',
+            text: 'Home'
+        },
+        {
+            href: '/blog',
+            text: 'Blog'
+        }
+        ]
     }
 }
 

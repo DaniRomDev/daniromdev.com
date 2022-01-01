@@ -22,7 +22,8 @@ module.exports = {
                 }
             },
             fontFamily: {
-                sans: ['Bodoni Moda', ...fontFamily.sans]
+                serif: ['Bodoni Moda', ...fontFamily.serif],
+                sans: ['IBM Plex Sans', ...fontFamily.sans],
             },
             typography: (theme) => ({
                 DEFAULT: {

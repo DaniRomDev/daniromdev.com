@@ -3,8 +3,9 @@ import Link from 'next/link'
 import useDelayedRender from 'use-delayed-render'
 import { useState, useEffect } from 'react'
 import styles from '../../styles/mobile-menu.module.css'
+import { NavigationRoute } from '../../config'
 
-export default function MobileMenu() {
+const MobileMenu: React.FC<{ items: NavigationRoute[] }> = ({ items = [] }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const { mounted: isMenuMounted, rendered: isMenuRendered } = useDelayedRender(
     isMenuOpen,
@@ -48,14 +49,17 @@ export default function MobileMenu() {
             isMenuRendered && styles.menuRendered
           )}
         >
-          <li
-            className="border-b border-gray-300 dark:border-gray-700 text-gray-900 dark:text-gray-100 text-sm font-semibold"
-            style={{ transitionDelay: '150ms' }}
-          >
-            <Link href="/">
-              <a className="flex w-auto pb-4">Home</a>
-            </Link>
-          </li>
+          {items.map(({ href, text }) => (
+            <li
+              key={`mobile-${href}`}
+              className="border-b border-gray-300 dark:border-gray-700 text-gray-900 dark:text-gray-100 text-sm font-semibold"
+              style={{ transitionDelay: '150ms' }}
+            >
+              <Link href={href}>
+                <a className="flex w-auto pb-4">{text}</a>
+              </Link>
+            </li>
+          ))}
         </ul>
       )}
     </>
@@ -110,3 +114,5 @@ function CrossIcon(props: JSX.IntrinsicElements['svg']) {
     </svg>
   )
 }
+
+export default MobileMenu
