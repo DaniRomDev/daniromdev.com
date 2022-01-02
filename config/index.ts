@@ -22,7 +22,7 @@ export type NavigationConfig = {
 const config = {
     meta: {
         url: process.env.NEXT_PUBLIC_APP_URL,
-        sitename: 'Daniel Romero',
+        sitename: 'Software engineering Blog - Daniel Romero',
         description: `Javascript lover, traveller and sometimes software engineer`,
         image: `${process.env.NEXT_PUBLIC_APP_URL}/static/images/banner.png`,
         type: 'website',

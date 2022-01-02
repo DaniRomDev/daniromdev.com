@@ -23,7 +23,7 @@ const Meta: React.FC<{ customMeta?: Partial<MetaConfig> }> = ({
         href={`${process.env.NEXT_PUBLIC_APP_URL}${router.asPath}`}
       />
       <meta property="og:type" content={meta.type} />
-      <meta property="og:site_name" content="Daniel Romero" />
+      <meta property="og:site_name" content={meta.sitename} />
       <meta property="og:description" content={meta.description} />
       <meta property="og:title" content={meta.title} />
     </Head>

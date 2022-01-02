@@ -2,9 +2,11 @@ import { allBlogs } from ".contentlayer/data"
 import { Blog } from ".contentlayer/types"
 import { pick } from "contentlayer/client"
 
-export const sortBlogPostsByLastPublished = (posts = allBlogs) => posts.map((post: Blog) =>
+export const sortBlogPosts = (posts: Blog[] = [], orderBy: 'asc' | 'desc' = 'desc') => posts.map((post: Blog) =>
     pick(post, ['slug', 'title', 'summary', 'publishedAt', 'categories'])
-).sort((a, b) => Number(new Date(b.publishedAt)) - Number(new Date(a.publishedAt)))
+).sort((a, b) => orderBy === 'desc' ?
+    Number(new Date(b.publishedAt)) - Number(new Date(a.publishedAt)) :
+    Number(new Date(a.publishedAt)) - Number(new Date(b.publishedAt)))
 
 export const allBlogPosts = () => allBlogs
 

@@ -12,7 +12,7 @@ import { Blog } from '.contentlayer/types'
 import { pick } from 'contentlayer/client'
 import { CrossIcon, SearchIcon } from 'components/Shared/Icons'
 import { H1, H3 } from 'components/Shared/Titles'
-import { filterBlogPosts, sortBlogPostsByLastPublished } from 'services/blog'
+import { allBlogPosts, filterBlogPosts, sortBlogPosts } from 'services/blog'
 
 const BlogPage: NextPage<InferGetStaticPropsType<typeof getStaticProps>> = ({
   posts
@@ -72,7 +72,7 @@ const BlogPage: NextPage<InferGetStaticPropsType<typeof getStaticProps>> = ({
 }
 
 export const getStaticProps: GetStaticProps = async () => {
-  return { props: { posts: sortBlogPostsByLastPublished() } }
+  return { props: { posts: sortBlogPosts(allBlogPosts(), 'desc') } }
 }
 
 export default BlogPage
