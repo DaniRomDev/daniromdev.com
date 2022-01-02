@@ -2,9 +2,10 @@ import { GetStaticPaths, GetStaticProps } from 'next'
 import { useMDXComponent } from 'next-contentlayer/hooks'
 import { allBlogs } from '.contentlayer/data'
 import type { Blog } from '.contentlayer/types'
-import BlogPost from '../../components/Blog/BlogPost'
+import BlogPost from 'components/Blog/BlogPost'
+import { NextPage } from 'next'
 
-const Post: React.FC<{ post: Blog }> = ({ post }) => {
+const Post: NextPage<{ post: Blog }> = ({ post }) => {
   const Component = useMDXComponent(post.body.code)
 
   return (

@@ -38,6 +38,9 @@ const config = {
             text: 'Blog'
         }
         ]
+    },
+    blog: {
+        categories: ['General', 'Javascript', 'PHP', 'Laravel', 'Deployment', 'Test', 'React', 'Mobile', 'Travel']
     }
 }
 

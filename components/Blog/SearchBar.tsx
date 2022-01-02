@@ -4,7 +4,7 @@ const SearchBar: React.FC<{
   onChange: React.ChangeEventHandler<HTMLInputElement>
 }> = ({ onChange }) => {
   return (
-    <div className="relative w-full mb-4">
+    <div className="relative mb-4">
       <input
         autoFocus
         aria-label="Search articles"
