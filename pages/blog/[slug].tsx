@@ -1,9 +1,9 @@
 import { GetStaticPaths, GetStaticProps } from 'next'
 import { useMDXComponent } from 'next-contentlayer/hooks'
-import { allBlogs } from '.contentlayer/data'
-import type { Blog } from '.contentlayer/types'
-import BlogPost from 'components/Blog/BlogPost'
 import { NextPage } from 'next'
+import { Blog } from '.contentlayer/types'
+import { allBlogPosts, findBlogPostByProperty } from 'services/blog'
+import BlogPost from 'components/Blog/BlogPost'
 
 const Post: NextPage<{ post: Blog }> = ({ post }) => {
   const Component = useMDXComponent(post.body.code)
@@ -16,17 +16,13 @@ const Post: NextPage<{ post: Blog }> = ({ post }) => {
   )
 }
 
-export const getStaticPaths: GetStaticPaths = async () => {
-  return {
-    paths: allBlogs.map((post) => ({ params: { slug: post.slug } })),
-    fallback: false
-  }
-}
+export const getStaticPaths: GetStaticPaths = async () => ({
+  paths: allBlogPosts().map(({ slug }) => ({ params: { slug } })),
+  fallback: false
+})
 
-export const getStaticProps: GetStaticProps = async ({ params }) => {
-  const post = allBlogs.find((post) => post.slug === params?.slug)
-
-  return { props: { post } }
-}
+export const getStaticProps: GetStaticProps = async ({ params }) => ({
+  props: { post: findBlogPostByProperty('slug', params?.slug as string) }
+})
 
 export default Post

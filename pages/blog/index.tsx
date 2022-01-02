@@ -1,18 +1,18 @@
-import { InferGetStaticPropsType, NextPage } from 'next'
+import { InferGetStaticPropsType, NextPage, GetStaticProps } from 'next'
 import { useState } from 'react'
-import { allBlogs } from '.contentlayer/data'
-import { pick } from 'contentlayer/client'
-import Meta from 'components/Shared/Meta'
-import { H1, H3 } from 'components/Shared/Titles'
 import SearchBar from 'components/Blog/SearchBar'
 import BlogCardSimple from 'components/Blog/BlogCardSimple'
 import Image from 'next/image'
 import BlogCard from 'components/Blog/BlogCard'
-import { GetStaticProps } from 'next'
-import { Blog } from '.contentlayer/types'
+import Meta from 'components/Shared/Meta'
 import BlogList from 'components/Blog/BlogList'
 import config from 'config'
+import { allBlogs } from '.contentlayer/data'
+import { Blog } from '.contentlayer/types'
+import { pick } from 'contentlayer/client'
 import { CrossIcon, SearchIcon } from 'components/Shared/Icons'
+import { H1, H3 } from 'components/Shared/Titles'
+import { filterBlogPosts, sortBlogPostsByLastPublished } from 'services/blog'
 
 const BlogPage: NextPage<InferGetStaticPropsType<typeof getStaticProps>> = ({
   posts
@@ -20,10 +20,10 @@ const BlogPage: NextPage<InferGetStaticPropsType<typeof getStaticProps>> = ({
   const [searchValue, setSearchValue] = useState<string>('')
   const [selectedCategory, setSelectedCategory] = useState<string>('')
 
-  const filteredBlogPosts = posts.filter(
-    (post: Blog) =>
-      post.title.toLowerCase().includes(searchValue.toLocaleLowerCase()) &&
-      post.categories.includes(selectedCategory)
+  const filteredBlogPosts = filterBlogPosts(
+    posts,
+    searchValue,
+    selectedCategory
   )
 
   return (
@@ -72,16 +72,7 @@ const BlogPage: NextPage<InferGetStaticPropsType<typeof getStaticProps>> = ({
 }
 
 export const getStaticProps: GetStaticProps = async () => {
-  const posts = allBlogs
-    .map((post) =>
-      pick(post, ['slug', 'title', 'summary', 'publishedAt', 'categories'])
-    )
-    .sort(
-      (a, b) =>
-        Number(new Date(b.publishedAt)) - Number(new Date(a.publishedAt))
-    )
-
-  return { props: { posts } }
+  return { props: { posts: sortBlogPostsByLastPublished() } }
 }
 
 export default BlogPage
