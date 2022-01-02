@@ -13,6 +13,7 @@ import { pick } from 'contentlayer/client'
 import { CrossIcon, SearchIcon } from 'components/Shared/Icons'
 import { H1, H3 } from 'components/Shared/Titles'
 import { allBlogPosts, filterBlogPosts, sortBlogPosts } from 'services/blog'
+import SelectCategory from 'components/Blog/SelectCategory'
 
 const BlogPage: NextPage<InferGetStaticPropsType<typeof getStaticProps>> = ({
   posts
@@ -41,31 +42,13 @@ const BlogPage: NextPage<InferGetStaticPropsType<typeof getStaticProps>> = ({
       </p>
       <SearchBar onChange={(e) => setSearchValue(e.target.value)} />
       <div className="flex flex-row justify-end relative">
-        <select
-          defaultValue=""
-          className="w-full md:max-w-sm mt-1 text-gray-900 bg-white border border-gray-200 rounded-md dark:border-gray-900 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800 dark:text-gray-100"
+        <SelectCategory
           onChange={(e) => setSelectedCategory(e.target.value)}
-        >
-          <option value="" disabled selected={selectedCategory === ''}>
-            Search by category
-          </option>
-          {config.blog.categories.map((category) => (
-            <option key={category} value={category.toLocaleLowerCase()}>
-              {category}
-            </option>
-          ))}
-        </select>
-        {selectedCategory && (
-          <button
-            onClick={(e) => setSelectedCategory('')}
-            className="absolute top-[15px] right-[60px]"
-          >
-            <CrossIcon />
-          </button>
-        )}
+          onClear={(e) => setSelectedCategory('')}
+          selectedCategory={selectedCategory}
+        />
       </div>
       <H3>Latest posts</H3>
-
       <BlogList type="card" posts={filteredBlogPosts} />
     </>
   )

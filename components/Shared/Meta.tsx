@@ -13,6 +13,8 @@ const Meta: React.FC<{ customMeta?: Partial<MetaConfig> }> = ({
     <Head>
       <title>{meta.title}</title>
       <meta name="robots" content="follow, index" />
+      <meta content="#ffffff" name="theme-color" />
+      <meta content="#ffffff" name="msapplication-TileColor" />
       <meta content={meta.description} name="description" />
       <meta
         property="og:url"

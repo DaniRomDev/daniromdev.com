@@ -20,10 +20,13 @@ module.exports = withContentlayer()({
         ignoreDuringBuilds: true,
     },
     images: {
-        domains: [
-            'images.unsplash.com',
-        ]
+        domains: []
     },
+    i18n: {
+        locales: ['es', 'en'],
+        defaultLocale: 'es'
+    },
+    poweredByHeader: false,
     //https://nextjs.org/docs/advanced-features/security-headers
     async headers() {
         return [

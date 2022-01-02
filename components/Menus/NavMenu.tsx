@@ -7,6 +7,7 @@ import cn from 'classnames'
 import MobileMenu from 'components/Menus/MobileMenu'
 import { NavigationRoute } from 'config'
 import ToggleTheme from 'components/Shared/ToggleTheme'
+import SelectLocale from 'components/Menus/SelectLocale'
 
 const NavItem: React.FC<NavigationRoute> = ({ href, text }) => {
   const router = useRouter()
@@ -37,7 +38,10 @@ const NavMenu: React.FC<{ items: NavigationRoute[] }> = ({ items = [] }) => {
           <NavItem key={href} href={href} text={text} />
         ))}
       </div>
-      <ToggleTheme />
+      <div className="flex items-center">
+        <ToggleTheme />
+        <SelectLocale />
+      </div>
     </nav>
   )
 }
