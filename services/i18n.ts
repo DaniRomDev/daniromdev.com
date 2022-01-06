@@ -18,5 +18,7 @@ export const t = (
         [Locales.es]: es
     };
 
-    return (availables[locale] && availables[locale][translation]) || translation;
+    return (availables[locale] && availables[locale][translation]) ?
+        availables[locale][translation] :
+        translation;
 };

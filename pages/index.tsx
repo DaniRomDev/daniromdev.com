@@ -1,19 +1,16 @@
 import type { NextPage } from 'next'
 import Head from 'next/head'
 import Image from 'next/image'
-import { useRouter } from 'next/router'
 import BasicLayout from 'layouts/BasicLayout'
-import { Locales, t } from 'services/i18n'
+import { useRouter } from 'next/router'
+import { useTranslation } from 'hooks/useTranslation'
 
 const Home: NextPage = () => {
-  const { locale } = useRouter()
+  const { translate } = useTranslation()
 
-  console.log(
-    'selected locale ',
-    locale,
-    t('La home', Locales[locale as string])
-  )
-  return <h1>{t('La home', Locales[locale as string])}</h1>
+  console.log('traduccion ', translate('La home'))
+
+  return <h1>{translate('La home')}</h1>
 }
 
 export default Home
