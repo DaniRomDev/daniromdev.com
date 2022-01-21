@@ -16,13 +16,34 @@ const Post: NextPage<{ post: Blog }> = ({ post }) => {
   )
 }
 
-export const getStaticPaths: GetStaticPaths = async () => ({
-  paths: allBlogPosts().map(({ slug }) => ({ params: { slug } })),
-  fallback: false
-})
+export const getStaticPaths: GetStaticPaths = async ({ locales = [] }) => {
+  return {
+    paths: locales
+      .map((locale: string) =>
+        allBlogPosts(locale)
+          .map(({ slug }) => ({
+            params: { slug },
+            locale
+          }))
+          .flat()
+      )
+      .flat(),
+    fallback: false
+  }
+}
 
-export const getStaticProps: GetStaticProps = async ({ params }) => ({
-  props: { post: findBlogPostByProperty('slug', params?.slug as string) }
+export const getStaticProps: GetStaticProps = async ({
+  params,
+  locale,
+  defaultLocale
+}) => ({
+  props: {
+    post: findBlogPostByProperty(
+      (locale || defaultLocale) as string,
+      'slug',
+      params?.slug as string
+    )
+  }
 })
 
 export default Post

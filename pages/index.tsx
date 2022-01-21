@@ -7,15 +7,15 @@ import { useTranslation } from 'hooks/useTranslation'
 import { GithubIcon, LinkedinIcon } from 'components/Shared/Icons'
 import config from 'config'
 import Profile from 'components/Profile'
+import { H3 } from 'components/Shared/Titles'
 
 const Home: NextPage = () => {
   const { translate } = useTranslation()
 
-  console.log('traduccion ', translate('La home'))
-
   return (
     <>
       <Profile />
+      <H3>Most viewed posts</H3>
     </>
   )
 }

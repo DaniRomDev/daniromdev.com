@@ -14,6 +14,7 @@ import { CrossIcon, SearchIcon } from 'components/Shared/Icons'
 import { H1, H3 } from 'components/Shared/Titles'
 import { allBlogPosts, filterBlogPosts, sortBlogPosts } from 'services/blog'
 import SelectCategory from 'components/Blog/SelectCategory'
+import { Router, useRouter } from 'next/router'
 
 const BlogPage: NextPage<InferGetStaticPropsType<typeof getStaticProps>> = ({
   posts
@@ -54,8 +55,15 @@ const BlogPage: NextPage<InferGetStaticPropsType<typeof getStaticProps>> = ({
   )
 }
 
-export const getStaticProps: GetStaticProps = async () => {
-  return { props: { posts: sortBlogPosts(allBlogPosts(), 'desc') } }
+export const getStaticProps: GetStaticProps = async ({
+  locale,
+  defaultLocale
+}) => {
+  return {
+    props: {
+      posts: sortBlogPosts(allBlogPosts(locale || defaultLocale), 'desc')
+    }
+  }
 }
 
 export default BlogPage
