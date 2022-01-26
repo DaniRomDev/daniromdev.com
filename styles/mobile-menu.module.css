@@ -43,6 +43,7 @@
 
 .menuRendered {
   opacity: 1;
+  padding: 2.1rem;
 }
 
 .menuRendered li {

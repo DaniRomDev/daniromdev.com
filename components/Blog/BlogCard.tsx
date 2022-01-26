@@ -15,7 +15,7 @@ const BlogCard: React.FC<{
         </span>
         <div>
           {post.categories.split(',').map((category: string) => (
-            <CategoryBadge key={`${category}-${post.slug}`} color="blue">
+            <CategoryBadge key={`${category}-${post.slug}`} color="green">
               {category.charAt(0).toUpperCase() + category.slice(1)}
             </CategoryBadge>
           ))}
@@ -27,7 +27,9 @@ const BlogCard: React.FC<{
             {post.title}
           </a>
         </Link>
-        <p className="mt-2 text-gray-600 dark:text-gray-100">{post.summary}</p>
+        <p className="mt-2 text-gray-600 dark:text-gray-100">
+          {post.summary}...
+        </p>
       </div>
       <div className="flex items-center justify-between mt-4">
         <Link href={`/blog/${post.slug}`}>

@@ -14,7 +14,7 @@ export const useFathomAnalytics = () => {
     //  - If you're using www. for your domain, make sure you include that here.
     if (process.env.NODE_ENV === 'production') {
       Fathom.load(config.analytics.fathom.tracking_code, {
-        includedDomains: [config.analytics.fathom.domain]
+        includedDomains: config.analytics.fathom.domains
       })
     }
 

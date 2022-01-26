@@ -8,6 +8,7 @@ interface CategoryBadgeProps {
     | 'indigo'
     | 'purple'
     | 'pink'
+    | 'dark'
 }
 
 const CategoryBadge: React.FC<CategoryBadgeProps> = ({ children, color }) => {
