@@ -36,7 +36,7 @@ export type SocialAccount = {
 }
 
 export type AnalyticConfig = {
-    domain: string;
+    domains: string[];
     tracking_code: string
 }
 
@@ -76,7 +76,7 @@ const config: Configuration = {
     },
     analytics: {
         fathom: {
-            domain: 'daniromdev.com',
+            domains: ['daniromdev.com', 'www.daniromdev.com'],
             tracking_code: process.env.NEXT_PUBLIC_FATHOM_TRACKING_CODE as string,
         }
     }

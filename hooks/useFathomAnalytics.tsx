@@ -12,9 +12,11 @@ export const useFathomAnalytics = () => {
     //  - Do not include https://
     //  - This must be an exact match of your domain.
     //  - If you're using www. for your domain, make sure you include that here.
-    Fathom.load(config.analytics.fathom.tracking_code, {
-      includedDomains: [config.analytics.fathom.domain]
-    })
+    if (process.env.NODE_ENV === 'production') {
+      Fathom.load(config.analytics.fathom.tracking_code, {
+        includedDomains: [config.analytics.fathom.domain]
+      })
+    }
 
     function onRouteChangeComplete() {
       Fathom.trackPageview()
@@ -26,5 +28,5 @@ export const useFathomAnalytics = () => {
     return () => {
       router.events.off('routeChangeComplete', onRouteChangeComplete)
     }
-  }, [])
+  }, [router.events])
 }
