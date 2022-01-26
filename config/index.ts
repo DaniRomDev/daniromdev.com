@@ -3,7 +3,8 @@ export type Configuration = {
     meta: MetaConfig,
     navigation: NavigationConfig,
     blog: BlogConfig,
-    accounts: { [name: string]: SocialAccount }
+    accounts: { [name: string]: SocialAccount },
+    analytics: { [platform: string]: AnalyticConfig }
 }
 
 export type MetaConfig = {
@@ -34,6 +35,11 @@ export type SocialAccount = {
     href: string
 }
 
+export type AnalyticConfig = {
+    domain: string;
+    tracking_code: string
+}
+
 
 const config: Configuration = {
     meta: {
@@ -56,7 +62,7 @@ const config: Configuration = {
         ]
     },
     blog: {
-        categories: ['General', 'Javascript', 'PHP', 'Laravel', 'Deployment', 'Test', 'React', 'Mobile', 'Travel']
+        categories: ['General', 'Javascript', 'PHP', 'Laravel', 'DevOps', 'Test', 'React', 'Mobile']
     },
     accounts: {
         github: {
@@ -66,6 +72,12 @@ const config: Configuration = {
         linkedin: {
             key: 'linkedin',
             href: `https://www.linkedin.com/in/${process.env.NEXT_PUBLIC_LINKEDIN_USER}`,
+        }
+    },
+    analytics: {
+        fathom: {
+            domain: process.env.NEXT_PUBLIC_APP_URL || 'daniromdev.com',
+            tracking_code: process.env.NEXT_PUBLIC_FATHOM_TRACKING_CODE as string,
         }
     }
 }

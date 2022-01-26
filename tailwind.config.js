@@ -40,7 +40,10 @@ module.exports = {
                             'scroll-margin-top': spacing[32]
                         },
                         thead: {
-                            borderBottomColor: theme('colors.gray.200')
+                            borderBottomColor: theme('colors.gray.200'),
+                            th: {
+                                color: theme('colors.gray.100')
+                            },
                         },
                         code: { color: theme('colors.pink.500') },
                         'blockquote p:first-of-type::before': false,
