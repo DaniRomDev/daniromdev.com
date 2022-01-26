@@ -76,7 +76,7 @@ const config: Configuration = {
     },
     analytics: {
         fathom: {
-            domain: process.env.NEXT_PUBLIC_APP_URL || 'daniromdev.com',
+            domain: 'daniromdev.com',
             tracking_code: process.env.NEXT_PUBLIC_FATHOM_TRACKING_CODE as string,
         }
     }
