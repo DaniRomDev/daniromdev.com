@@ -1,0 +1,88 @@
+---
+title: 'Dockerizando una aplicación Laravel con HTTPS'
+publishedAt: '2022-03-02'
+summary: 'Que buenos aquellos tiempos donde usabamos máquinas virtuales como Homestead o Valet para preparar nuestros entornos y empezar a trabajar con Laravel. Las cosas han cambiado y Docker ha pasado a ser una herramienta de contanerización demasiado útil como dejar pasarla de largo.'
+image: '/static/images/all-start-here/og.png'
+categories: 'devops'
+language: 'es'
+---
+
+Que buenos aquellos tiempos donde usabamos máquinas virtuales como Homestead o Valet para preparar nuestros entornos y empezar a trabajar con Laravel. Las cosas han cambiado y Docker ha pasado a ser una herramienta de contanerización demasiado útil como dejar pasarla de largo.
+
+Tarde o temprano en tu carrera como programador vas a tener que utilizar Docker y preparar tus entornos tanto para trabajar en local como para usarlos en cloud. De momento vamos a preparar un entorno local que simule lo más posible a nuestro aplicación en producción.
+
+**_Puedes acceder al repositorio desde [este enlace](https://github.com/DaniRomDev/Docker-Starter-PHP)_**
+
+## Ventajas
+
+- No tienes que instalar una base de datos o cualquier otra implementación en tu máquina host.
+- Sabes que tu equipo de desarrollo va a trabajar en un entorno estandarizado
+- Levantar, parar o añadir nuevos contenedores es tan fácil como lanzar simples comandos de terminal.
+- Puedes separar tu build dependiendo del target (development, staging, production ...)
+- Con Docker-Compose la configuración y manejo de tus contenedores es más fácil que nunca
+
+## Contras
+
+- Hay que tener en cuenta la arquitectura de tu sistema operativo donde vas a utilizar Docker _(por ejemplo si usas un Mac con el chip m1 solo podras usar imágenes que soporten arquitectura arm)_
+- Hay una pequeña curva de aprendizaje antes de sentirse cómodo dockerizando entornos
+
+---
+
+## ¿Porque crear tu propio entorno y no usar [Laravel sail](https://laravel.com/docs/8.x/sail)?
+
+Bien, es cierto que laravel ya tiene un paquete oficial que viene con las nuevas instalaciones y te permite levantar tu entorno dockerizado. No hay nada malo en ello y si no tienes mucha experiencia en Docker y quieres concentrarte en tu aplicación es un cámino totalmente válido.
+Solo tengo una pega con ello, **necesitas composer instalado en tu sistema**, en mi opinión ya es una dependencia adicional que tengo que instalar en mi máquina para empezar a usar sail, ya que necesito instalarla primero como dependencia antes de usarla.
+
+## Que infrastructura nos provee este template
+
+En este template tendremos NGINX para servir nuestra aplicación tanto por HTTP como HTTPS, una base de datos MariaDB, un redis para almacenar nuestros jobs y consumirlos a través de colas, PHPmyAdmin para visualizar e interactuar con nuestras bases de datos y NGROK para compartir nuestro a través de una dirección web pública.
+
+## Makefile es nuestro amigo
+
+Este archivo te será familiar si usas algún sistema unix y cuando por ejemplo te bajas un paquete que no es oficial, en las instrucciones de instalación sale una instrucción parecida a: `chmod u+x ./install && ./make`.
+
+Los Makefile son puntos de entrada que nos permite abstraer la interacción con los elementos de nuestra aplicación que en nuestro caso serán contenedores docker o incluso scripts adicionales que debamos utilizar en la build.
+
+### Ejemplo del makefile que usa el template
+
+```sh
+#CURRENT DIR FOR WINDOWS & UNIX SYSTEMS
+SHELL=/bin/bash
+VERSION=${shell cat VERSION}
+CURRENT_DIR := $(dir $(abspath $(lastword $(MAKEFILE_LIST))))
+DOMAIN :=laravel.local
+PROJECT_FOLDER :=src
+NGINX_CERTS_PATH :=${CURRENT_DIR}services/nginx/certs
+#DEFAULT BEHAVIOR
+all:build
+
+.PHONY: build
+build:install env docker/build-nc up
+
+install:
+	@chmod -R u+x "${CURRENT_DIR}scripts"
+	$(SHELL) -c "${CURRENT_DIR}scripts/install-dependencies.sh"
+	@mkdir -p src
+	@make certs
+
+	# ... rest of the file
+```
+
+Lo primero que vemos al principio del archivo es una serie de variables definidas que usaremos en nuestro archivo, como por ejemplo, decidir con que tipo de shell ejecutaremos los comandos, el directorio actual agnóstico del OS, el dominio custom que queremos utilizar para nuestro desarrollo local, etc. Aquí es donde entra la configuración que necesite cada usuario, por lo que no es un archivo 'cerrado al cambio' si no que realmente podemos incluso expandirlo para satisfacer nuestras necesidades
+
+Como podemos observar, ya no tenemos que tirar todos los comandos manualmente nosotros como usuarios, si no que directamente ejecutariamos `make o make build` ya que por defecto en estos archivos utiliza el primer comando definido como comportamiento por defecto si no le decimos cual.
+
+```sh
+.PHONY: build
+build:install env docker/build-nc up
+```
+
+---
+
+\***_NOTA_**: .PHONY es para evitar colisiones de nombre de directorios al ejecutar los comandos con make, si hubiera una carpeta en el directorio del usuario que se llamara **_'build'_**, al ejecutar `make build` tomaría la carpeta y no nuestro comando si no definimos este atributo\*
+
+---
+
+Esto traducido sería,, ejecutame el comando **build** que inicializará en cadena los comandos: `install -> env -> docker/build-nc -> up `
+
+Esto nos ahorra muchisimo trabajo ya que tendríamos todo orquestado a través de nuestro punto de entrada y si un nuevo desarrollador entra al equipo solo tendrá que ejecutar un simple comando para tener su entorno listo para trabajar.
