@@ -3,14 +3,17 @@ title: 'Dockerizando una aplicación Laravel con HTTPS'
 publishedAt: '2022-03-02'
 summary: 'Que buenos aquellos tiempos donde usabamos máquinas virtuales como Homestead o Valet para preparar nuestros entornos y empezar a trabajar con Laravel. Las cosas han cambiado y Docker ha pasado a ser una herramienta de contanerización demasiado útil como dejar pasarla de largo.'
 image: '/static/images/all-start-here/og.png'
-categories: 'devops'
+categories: 'laravel,docker'
 language: 'es'
 ---
 
-Que buenos aquellos tiempos donde usabamos máquinas virtuales como Homestead o Valet para preparar nuestros entornos y empezar a trabajar con Laravel. Las cosas han cambiado y Docker ha pasado a ser una herramienta de contanerización demasiado útil como dejar pasarla de largo.
+Que buenos aquellos tiempos donde usabamos máquinas virtuales como Homestead para preparar nuestros entornos y empezar a trabajar con Laravel. Las cosas han cambiado y Docker ha pasado a ser una herramienta de contanerización demasiado útil como dejar pasarla de largo.
 
 Tarde o temprano en tu carrera como programador vas a tener que utilizar Docker y preparar tus entornos tanto para trabajar en local como para usarlos en cloud. De momento vamos a preparar un entorno local que simule lo más posible a nuestro aplicación en producción.
 
+# Docker Starter PHP
+
+_El repositorio está pensado para Laravel pero nada te impide servir otro tipo de aplicación PHP dentro del directorio src._
 **_Puedes acceder al repositorio desde [este enlace](https://github.com/DaniRomDev/Docker-Starter-PHP)_**
 
 ## Ventajas
@@ -23,36 +26,37 @@ Tarde o temprano en tu carrera como programador vas a tener que utilizar Docker 
 
 ## Contras
 
-- Hay que tener en cuenta la arquitectura de tu sistema operativo donde vas a utilizar Docker _(por ejemplo si usas un Mac con el chip m1 solo podras usar imágenes que soporten arquitectura arm)_
+- Hay que tener en cuenta la arquitectura de tu sistema operativo para las imágenes de Docker que vayas a utilizar _(por ejemplo si usas un Mac con el chip M1 solo podras usar imágenes que soporten arquitectura arm)_
 - Hay una pequeña curva de aprendizaje antes de sentirse cómodo dockerizando entornos
 
 ---
 
 ## ¿Porque crear tu propio entorno y no usar [Laravel sail](https://laravel.com/docs/8.x/sail)?
 
-Bien, es cierto que laravel ya tiene un paquete oficial que viene con las nuevas instalaciones y te permite levantar tu entorno dockerizado. No hay nada malo en ello y si no tienes mucha experiencia en Docker y quieres concentrarte en tu aplicación es un cámino totalmente válido.
-Solo tengo una pega con ello, **necesitas composer instalado en tu sistema**, en mi opinión ya es una dependencia adicional que tengo que instalar en mi máquina para empezar a usar sail, ya que necesito instalarla primero como dependencia antes de usarla.
+Bien, es cierto que Laravel ya tiene un paquete oficial que viene con las nuevas instalaciones y te permite levantar tu entorno dockerizado. No hay nada malo en ello y si no tienes mucha experiencia en Docker y quieres concentrarte en tu aplicación es un cámino totalmente válido.
+Lo que no me convence es **necesitar composer instalado en tu sistema al ser laravel/sail una librería de desarrollo definida en el archivo composer.json de Laravel** y en mi opinión, es una dependencia adicional que tengo que instalar en mi máquina para empezar a usar Sail y mi propósito como desarrollador es usar Docker para evitar este tipo de instalaciones extras.
 
 ## Que infrastructura nos provee este template
 
-En este template tendremos NGINX para servir nuestra aplicación tanto por HTTP como HTTPS, una base de datos MariaDB, un redis para almacenar nuestros jobs y consumirlos a través de colas, PHPmyAdmin para visualizar e interactuar con nuestras bases de datos y NGROK para compartir nuestro a través de una dirección web pública.
+En este template tendremos [NGINX](https://www.nginx.com/) para servir nuestra aplicación tanto por HTTP como HTTPS, una base de datos [MariaDB](https://mariadb.org/), un [Redis](https://redis.io/) para temas de caché, sesiones, colas, etc. [PHPmyAdmin](https://www.phpmyadmin.net/) para visualizar e interactuar con nuestras bases de datos y [NGROK](https://ngrok.com/) para compartir nuestra aplicación a través de una dirección web pública.
 
-## Makefile es nuestro amigo
+## Makefile como punto de entrada
 
-Este archivo te será familiar si usas algún sistema unix y cuando por ejemplo te bajas un paquete que no es oficial, en las instrucciones de instalación sale una instrucción parecida a: `chmod u+x ./install && ./make`.
+Este archivo te será familiar si usas algún sistema unix y te descargas un paquete que no es oficial, en las instrucciones de instalación sale una instrucción parecida a: `chmod u+x ./install && ./make`.
 
 Los Makefile son puntos de entrada que nos permite abstraer la interacción con los elementos de nuestra aplicación que en nuestro caso serán contenedores docker o incluso scripts adicionales que debamos utilizar en la build.
 
 ### Ejemplo del makefile que usa el template
 
-```sh
+```bash
 #CURRENT DIR FOR WINDOWS & UNIX SYSTEMS
+CURRENT_DIR := $(dir $(abspath $(lastword $(MAKEFILE_LIST))))
 SHELL=/bin/bash
 VERSION=${shell cat VERSION}
-CURRENT_DIR := $(dir $(abspath $(lastword $(MAKEFILE_LIST))))
 DOMAIN :=laravel.local
 PROJECT_FOLDER :=src
 NGINX_CERTS_PATH :=${CURRENT_DIR}services/nginx/certs
+
 #DEFAULT BEHAVIOR
 all:build
 
@@ -70,9 +74,9 @@ install:
 
 Lo primero que vemos al principio del archivo es una serie de variables definidas que usaremos en nuestro archivo, como por ejemplo, decidir con que tipo de shell ejecutaremos los comandos, el directorio actual agnóstico del OS, el dominio custom que queremos utilizar para nuestro desarrollo local, etc. Aquí es donde entra la configuración que necesite cada usuario, por lo que no es un archivo 'cerrado al cambio' si no que realmente podemos incluso expandirlo para satisfacer nuestras necesidades
 
-Como podemos observar, ya no tenemos que tirar todos los comandos manualmente nosotros como usuarios, si no que directamente ejecutariamos `make o make build` ya que por defecto en estos archivos utiliza el primer comando definido como comportamiento por defecto si no le decimos cual.
+Como podemos observar, ya no tenemos que tirar todos los comandos manualmente nosotros como usuarios para preparar el entorno, un simple `make` y lanzaría el comando definido por defecto a través de la key `all:build`
 
-```sh
+```bash
 .PHONY: build
 build:install env docker/build-nc up
 ```
@@ -83,6 +87,11 @@ build:install env docker/build-nc up
 
 ---
 
-Esto traducido sería,, ejecutame el comando **build** que inicializará en cadena los comandos: `install -> env -> docker/build-nc -> up `
+Lo que entiende tu PC como orden es lo siguiente:
+**Ejecutame el comando **build** que inicializará en cadena los comandos: `install -> env -> docker/build-nc -> up`**
 
 Esto nos ahorra muchisimo trabajo ya que tendríamos todo orquestado a través de nuestro punto de entrada y si un nuevo desarrollador entra al equipo solo tendrá que ejecutar un simple comando para tener su entorno listo para trabajar.
+
+**Si quieres darle una oportunidad echále un vistazo al [README.md](https://github.com/DaniRomDev/Docker-Starter-PHP) del repositorio y no te olvides de darle una estrella si te ha gustado.**
+
+Hasta pronto.

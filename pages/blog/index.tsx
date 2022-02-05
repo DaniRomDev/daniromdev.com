@@ -15,10 +15,13 @@ import { H1, H3 } from 'components/Shared/Titles'
 import { allBlogPosts, filterBlogPosts, sortBlogPosts } from 'services/blog'
 import SelectCategory from 'components/Blog/SelectCategory'
 import { Router, useRouter } from 'next/router'
+import { useTranslation } from 'hooks/useTranslation'
 
 const BlogPage: NextPage<InferGetStaticPropsType<typeof getStaticProps>> = ({
   posts
 }) => {
+  const { translate } = useTranslation()
+
   const [searchValue, setSearchValue] = useState<string>('')
   const [selectedCategory, setSelectedCategory] = useState<string>('')
 
@@ -38,8 +41,8 @@ const BlogPage: NextPage<InferGetStaticPropsType<typeof getStaticProps>> = ({
       />
       <H1>Blog</H1>
       <p className="mb-4 text-gray-600 dark:text-gray-400">
-        I've written <strong>{posts.length}</strong> articles related to
-        software engineering on this blog.
+        {translate("I've written")} <strong>{posts.length}</strong>{' '}
+        {translate('articles related to software engineering on this blog')}.
       </p>
       <SearchBar onChange={(e) => setSearchValue(e.target.value)} />
       <div className="flex flex-row justify-end relative">
@@ -49,7 +52,7 @@ const BlogPage: NextPage<InferGetStaticPropsType<typeof getStaticProps>> = ({
           selectedCategory={selectedCategory}
         />
       </div>
-      <H3>Latest posts</H3>
+      <H3>{translate('Latest posts')}</H3>
       <BlogList type="card" posts={filteredBlogPosts} />
     </>
   )

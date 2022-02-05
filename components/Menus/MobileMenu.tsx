@@ -6,11 +6,13 @@ import { NavigationRoute } from 'config'
 import { CrossIcon, MenuIcon } from 'components/Shared/Icons'
 import styles from 'styles/mobile-menu.module.css'
 import { useRouter } from 'next/router'
+import { useTranslation } from 'hooks/useTranslation'
 
 const MobileMenu: React.FC<{
   items: NavigationRoute[]
 }> = ({ items = [] }) => {
   const router = useRouter()
+  const { translate } = useTranslation()
 
   const [isMenuOpen, setIsMenuOpen] = useState<boolean>(false)
   const { mounted: isMenuMounted, rendered: isMenuRendered } = useDelayedRender(
@@ -64,7 +66,7 @@ const MobileMenu: React.FC<{
               style={{ transitionDelay: `${150 + 25 * (index + 1)}ms` }}
             >
               <Link href={href}>
-                <a className="flex w-auto pb-4">{text}</a>
+                <a className="flex w-auto pb-4">{translate(text)}</a>
               </Link>
             </li>
           ))}

@@ -8,9 +8,12 @@ import MobileMenu from 'components/Menus/MobileMenu'
 import { NavigationRoute } from 'config'
 import ToggleTheme from 'components/Shared/ToggleTheme'
 import SelectLocale from 'components/Menus/SelectLocale'
+import { useTranslation } from 'hooks/useTranslation'
 
 const NavItem: React.FC<NavigationRoute> = ({ href, text }) => {
   const router = useRouter()
+  const { translate } = useTranslation()
+
   const isActive = router.asPath === href
 
   return (
@@ -23,7 +26,7 @@ const NavItem: React.FC<NavigationRoute> = ({ href, text }) => {
           'text-lg hidden md:inline-block p-1 sm:px-3 sm:py-2 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-800 transition-all'
         )}
       >
-        <span className="capsize">{text}</span>
+        <span className="capsize">{translate(text)}</span>
       </a>
     </NextLink>
   )

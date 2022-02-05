@@ -1,4 +1,5 @@
 import { Blog } from '.contentlayer/types'
+import { useTranslation } from 'hooks/useTranslation'
 import BlogCard from './BlogCard'
 import BlogCardSimple from './BlogCardSimple'
 
@@ -8,6 +9,8 @@ interface BlogListProps {
 }
 
 const BlogList: React.FC<BlogListProps> = ({ posts, type = 'card' }) => {
+  const { translate } = useTranslation()
+
   return (
     <>
       {posts.map((post) =>
@@ -18,7 +21,9 @@ const BlogList: React.FC<BlogListProps> = ({ posts, type = 'card' }) => {
         )
       )}
       {!posts.length && (
-        <p className="mb-4 text-gray-600 dark:text-gray-400">No posts found.</p>
+        <p className="mb-4 text-gray-600 dark:text-gray-400">
+          {translate('No posts found')}.
+        </p>
       )}
     </>
   )

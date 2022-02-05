@@ -58,11 +58,15 @@ const config: Configuration = {
         {
             href: '/blog',
             text: 'Blog'
+        },
+        {
+            href: '/resources',
+            text: 'Resources'
         }
         ]
     },
     blog: {
-        categories: ['General', 'Javascript', 'PHP', 'Laravel', 'DevOps', 'Test', 'React', 'Mobile']
+        categories: ['General', 'Javascript', 'PHP', 'Laravel', 'Docker', 'DevOps', 'Test', 'React', 'Mobile']
     },
     accounts: {
         github: {

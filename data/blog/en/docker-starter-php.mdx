@@ -1,12 +1,97 @@
 ---
-title: 'Getting off to a good start 2022'
-publishedAt: '2022-01-01'
-summary: 'Happy new year 2022, here start the journey of Dani romero'
+title: 'Dockerizing a Laravel application with HTTPS'
+publishedAt: '2022-02-05'
+summary: 'Good old days when we used virtual machines like Homestead to prepare our environments and start working with Laravel. Things have changed and Docker has become too useful a containerization'
 image: '/static/images/all-start-here/og.png'
-categories: 'devops'
+categories: 'laravel,docker'
 language: 'en'
 ---
 
-## All starts here
+Good old days when we used virtual machines like Homestead to prepare our environments and start working with Laravel. Things have changed and Docker has become too useful a containerization tool to let it pass us by.
 
-Example post
+Sooner or later in your career as a programmer you will have to use Docker and prepare your environments to work both locally and in the cloud. For now we are going to prepare a local environment that simulates as much as possible our production application.
+
+# Docker Starter PHP
+
+\*The repository is intended for Laravel but nothing prevents you to serve another type of PHP application inside the **_src_** directory.\*
+**_You can access to the repository in [this link](https://github.com/DaniRomDev/Docker-Starter-PHP)_**
+
+## Advantages
+
+- You don't have to install a database or any other implementation on your host machine.
+- You know that your development team will be working in a standardized environment.
+- Raising, stopping or adding new containers is as easy as launching simple terminal commands.
+- You can separate your build depending on the target (development, staging, production ...).
+- With Docker-Compose the configuration and management of your containers is easier than ever.
+
+## Cons
+
+- You have to take into account the architecture of your operating system for the Docker images you are going to use _(for example if you use a Mac with the M1 chip you can only use images that support arm architecture)_.
+- There is a small learning curve before you get comfortable with dockerizing environments
+
+---
+
+## ¿Why create your own environment and not use [Laravel sail](https://laravel.com/docs/8.x/sail)?
+
+Well, it is true that Laravel already has an official package that comes with the new installations and allows you to build your dockerized environment. There's nothing wrong with that and if you don't have much experience in Docker and want to focus on your application it's a totally valid approach.
+What doesn't convince me is **needing composer installed on your system as laravel/sail is a development library defined in Laravel's composer.json file** and in my opinion, it's an additional dependency that I have to install on my machine to start using Sail and my purpose as a developer is to use Docker to avoid this kind of extra installations.
+
+## What infrastructure does this template provide us with?
+
+In this template we will have [NGINX](https://www.nginx.com/) to serve our application both over HTTP and HTTPS, a database [MariaDB](https://mariadb.org/), a [Redis](https://redis.io/) for caching issues, sessions, queues, etc. [PHPmyAdmin](https://www.phpmyadmin.net/) to visualize and interact with our databases and [NGROK](https://ngrok.com/) to share our application through a public web address.
+
+## Makefile as entry point
+
+This file will be familiar to you if you use a unix system and you download an unofficial package, in the installation instructions there is an instruction similar to: `chmod u+x ./install && ./make`.
+
+The Makefile are entry points that allow us to abstract the interaction with the elements of our application that in our case will be docker containers or even additional scripts that we must use in the build.
+
+### Example of the makefile that the template uses
+
+```bash
+#CURRENT DIR FOR WINDOWS & UNIX SYSTEMS
+CURRENT_DIR := $(dir $(abspath $(lastword $(MAKEFILE_LIST))))
+SHELL=/bin/bash
+VERSION=${shell cat VERSION}
+DOMAIN :=laravel.local
+PROJECT_FOLDER :=src
+NGINX_CERTS_PATH :=${CURRENT_DIR}services/nginx/certs
+
+#DEFAULT BEHAVIOR
+all:build
+
+.PHONY: build
+build:install env docker/build-nc up
+
+install:
+	@chmod -R u+x "${CURRENT_DIR}scripts"
+	$(SHELL) -c "${CURRENT_DIR}scripts/install-dependencies.sh"
+	@mkdir -p src
+	@make certs
+
+	# ... rest of the file
+```
+
+The first thing we see at the beginning of the file is a series of defined variables that we will use in our file, such as deciding which shell type we will run the commands with, the current OS agnostic directory, the custom domain we want to use for our local development, etc. This is where the configuration needed by each user comes in, so it is not a 'closed to change' file but we can actually even expand it to suit our needs.
+
+As we can see, we no longer have to manually throw all the commands ourselves as users to prepare the environment, a simple `make` and it would launch the command defined by default through the `all:build` key.
+
+```bash
+.PHONY: build
+build:install env docker/build-nc up
+```
+
+---
+
+\***_NOTE_**: .PHONY is to avoid directory name collisions when executing commands with make, if there was a folder in the user's directory named **_'build'_**, when executing `make build` it would take the folder and not our command if we do not define this attribute.\*
+
+---
+
+What your PC understands as a command is the following:
+**Run me the **build** command which will initialize in chain the commands: `install -> env -> docker/build-nc -> up`**.
+
+This saves us a lot of work since we would have everything orchestrated through our entry point and if a new developer enters the team he will only have to run a simple command to have his environment ready to work.
+
+**If you want to give it a try take a look at the [README.md](https://github.com/DaniRomDev/Docker-Starter-PHP) from the repository and don't forget to give it a star if you liked it.**
+
+See you soon.

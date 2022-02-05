@@ -1,1 +1,1 @@
-# The blog for travellers and programmers
+# The blog for hobby programmers

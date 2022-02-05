@@ -20,7 +20,7 @@ const Home: NextPage<InferGetStaticPropsType<typeof getStaticProps>> = ({
   return (
     <>
       <Profile />
-      <H3>Most viewed posts</H3>
+      <H3>{translate('Most viewed posts')}</H3>
       {posts.map((post: Blog) => (
         <>
           <BlogCardSimple key={post.slug} post={post} />
