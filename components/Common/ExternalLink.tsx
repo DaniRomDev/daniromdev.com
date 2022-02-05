@@ -1,7 +1,7 @@
 type ExternalLinkProps = {
   title: string
   href: string
-  index: string
+  index: number
 }
 
 const ExternalLink: React.FC<ExternalLinkProps> = ({ href, title, index }) => {
@@ -17,7 +17,7 @@ const ExternalLink: React.FC<ExternalLinkProps> = ({ href, title, index }) => {
         <div className="flex flex-col sm:flex-row justify-between items-baseline">
           <div className="flex items-center">
             <div className="text-gray-300 dark:text-gray-400 text-left mr-6">
-              {index}
+              {index + 1 < 10 ? `0${index + 1}` : (index + 1).toString()}
             </div>
             <h4 className="text-lg font-medium w-full text-gray-800 dark:text-gray-100">
               {title}

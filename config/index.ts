@@ -3,8 +3,16 @@ export type Configuration = {
     meta: MetaConfig,
     navigation: NavigationConfig,
     blog: BlogConfig,
+    external_links: {
+        [name: string]: ExternalLink[]
+    }
     accounts: { [name: string]: SocialAccount },
     analytics: { [platform: string]: AnalyticConfig }
+}
+
+export type ExternalLink = {
+    href: string,
+    title: string
 }
 
 export type MetaConfig = {
@@ -66,7 +74,36 @@ const config: Configuration = {
         ]
     },
     blog: {
-        categories: ['General', 'Javascript', 'PHP', 'Laravel', 'Docker', 'DevOps', 'Test', 'React', 'Mobile']
+        categories: ['General', 'Javascript', 'PHP', 'Laravel', 'Docker', 'DevOps', 'Testing', 'React', 'Mobile']
+    },
+    external_links: {
+        general: [{
+            href: "https://jameshalsall.co.uk/posts/why-soft-deletes-are-evil-and-what-to-do-instead",
+            title: "Why soft deletes are evil and what to do instead"
+        }],
+        laravel: [{ href: "https://laravel-news.com", title: "Laravel news " },
+        { href: "https://laravel-code.tips/", title: "Laravel code tips" },
+        { href: "https://spatie.be/open-source?search=&sort=-downloads", title: "Spatie open source packages and courses" }
+
+        ],
+        devOps: [{
+            href: "https://blog.udemy.com/what-is-devops/",
+            title: "What Is DevOps: How To Build An Efficient DevOps Team"
+        },
+        {
+            href: "https://blog.udemy.com/devops-engineer/?utm_source=newsletter-instructor&utm_medium=instructor&utm_campaign=blog",
+            title: "Becoming a DevOps Engineer: Understanding the Role and Responsibilities"
+        }],
+        ["clean Architectures"]: [{
+            href: "https://patricsteiner.github.io/state-machine-in-a-ddd-context/",
+            title: "State machine in a DDD context"
+        }, {
+            href: "https://medium.com/@felipefreitasbatista/developing-the-ubiquitous-language-1382b720bb8c",
+            title: "Developing the ubiquitous language"
+        }, {
+            href: "https://github.com/Sairyss/domain-driven-hexagon",
+            title: "Domain driven hexagon"
+        }]
     },
     accounts: {
         github: {

@@ -14,5 +14,6 @@ module.exports = {
     ['Read more']: 'Leer más',
     ["I've written"]: 'He escrito',
     ["articles related to software engineering on this blog"]: "artículos relacionados con la ingenería del software en este blog",
-    ["Quality external resources"]: "Recursos externos de calidad"
+    ["Quality external resources"]: "Recursos externos de calidad",
+    ['Quality external resources to help you grow up as a programmer']: "Recursos externos de calidad para ayudarte a crecer como programador"
 }
