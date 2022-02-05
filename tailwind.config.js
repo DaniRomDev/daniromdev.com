@@ -64,7 +64,7 @@ module.exports = {
                             borderLeftColor: theme('colors.gray.700'),
                             color: theme('colors.gray.300')
                         },
-                        'h2,h3,h4': {
+                        'h1,h2,h3,h4': {
                             color: theme('colors.gray.100'),
                             'scroll-margin-top': spacing[32]
                         },
@@ -99,6 +99,5 @@ module.exports = {
     },
     plugins: [
         require('@tailwindcss/typography'),
-        require('@tailwindcss/forms'),
-        require('@themesberg/flowbite/plugin')]
+        require('@tailwindcss/forms')]
 };
