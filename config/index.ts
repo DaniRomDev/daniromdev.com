@@ -53,10 +53,10 @@ const config: Configuration = {
     meta: {
         url: process.env.NEXT_PUBLIC_APP_URL || 'https://daniromdev.com',
         sitename: 'Software engineering Blog - Daniel Romero',
-        description: `Javascript lover, traveller and sometimes software engineer`,
+        description: `Clean code lover, failed traveller attempt and sometimes software engineer`,
         image: `${process.env.NEXT_PUBLIC_APP_URL}/static/images/banner.png`,
         type: 'website',
-        title: "The blog for programmers that like travel and computer stuff"
+        title: "The blog for programmers that like computer stuff"
     },
     navigation: {
         routes: [{
@@ -74,12 +74,18 @@ const config: Configuration = {
         ]
     },
     blog: {
-        categories: ['General', 'Javascript', 'PHP', 'Laravel', 'Docker', 'DevOps', 'Testing', 'React', 'Mobile']
+        categories: ['General', 'Javascript', 'PHP', 'Clean architectures', 'Laravel', 'Docker', 'DevOps', 'Testing', 'React', 'Mobile']
     },
     external_links: {
         general: [{
             href: "https://jameshalsall.co.uk/posts/why-soft-deletes-are-evil-and-what-to-do-instead",
             title: "Why soft deletes are evil and what to do instead"
+        }, {
+            href: "https://stanete.com/system-design-101",
+            title: "System design 101"
+        }, {
+            href: "https://stanete.com/system-design-102",
+            title: "System design 102"
         }],
         laravel: [{ href: "https://laravel-news.com", title: "Laravel news " },
         { href: "https://laravel-code.tips/", title: "Laravel code tips" },
@@ -95,6 +101,12 @@ const config: Configuration = {
             title: "Becoming a DevOps Engineer: Understanding the Role and Responsibilities"
         }],
         ["clean Architectures"]: [{
+            href: "https://refactoring.guru/",
+            title: "Refactoring guru (Design patterns with real examples)"
+        }, {
+            href: "https://www.patterns.dev/",
+            title: "Free book on Javascript patterns, updated on 2022"
+        }, {
             href: "https://patricsteiner.github.io/state-machine-in-a-ddd-context/",
             title: "State machine in a DDD context"
         }, {

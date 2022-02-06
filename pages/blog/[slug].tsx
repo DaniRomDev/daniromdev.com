@@ -4,14 +4,14 @@ import { NextPage } from 'next'
 import { Blog } from '.contentlayer/types'
 import { allBlogPosts, findBlogPostByProperty } from 'services/blog'
 import BlogPost from 'components/Blog/BlogPost'
+import CustomMDXComponents from 'components/CustomMDX'
 
 const Post: NextPage<{ post: Blog }> = ({ post }) => {
   const Component = useMDXComponent(post.body.code)
 
   return (
     <BlogPost post={post}>
-      <Component />
-      {/*Remember for DaniRomero --> you can pass custom components to render on markdown as <Component components={...} */}
+      <Component components={{ ...CustomMDXComponents }} />
     </BlogPost>
   )
 }

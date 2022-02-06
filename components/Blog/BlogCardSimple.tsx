@@ -19,7 +19,7 @@ const BlogCardSimple: React.FC<{
               0 {translate('views')}
             </p>
           </div>
-          <p className="text-gray-600 dark:text-gray-400">{post.summary}</p>
+          <p className="text-gray-600 dark:text-gray-400">{post.summary}...</p>
         </div>
       </a>
     </Link>
