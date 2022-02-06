@@ -1,10 +1,10 @@
 ---
-title: 'Patrones de diseño que puedes usar en tu dia a dia: Adapter & Strategy'
+title: 'Design patterns you can use on your day-to-day life: Adapter & Strategy'
 publishedAt: '2022-02-06'
 summary: ''
 image: '/static/images/all-start-here/og.png'
 categories: 'laravel,php'
-language: 'es'
+language: 'en'
 ---
 
 Fuente de inspiración para escribir este artículo: [Colin Decarlo - Design Patterns with Laravel](https://www.youtube.com/watch?v=e4ugSgGaCQ0)
@@ -207,98 +207,29 @@ class AppServiceProvider extends ServiceProvider
     }
 ```
 
-Se podría aplicar un pequeño refactor y definir directamente la configuración del driver en el constructor de cada clase y simplemente instanciar pero las cosas podrían cambiar a corto/medio plazo y esta configuración podría tener otra fuente y no el framework de Laravel por ejemplo. Esto ya es según las necesidades del proyecto.
+Se podría aplicar un pequeño refactor y definir directamente la configuración del driver en el constructor de la clase y aquí simplemente instanciar pero las cosas podrían cambiar a corto/medio plazo y esta configuración podría tener otra fuente y no el framework de Laravel por ejemplo. Esto ya es según las necesidades del proyecto.
 
-### Limpiando nuestro controlador utilizando nuestro patrón Adapter
+### Limpiando nuestro controlador que el nuevo patrón Adapter
 
 Si aplicamos estos cambios en nuestro controlador podemos ver que tenemos algo mas limpio y tolerable al cambio que al inicio:
 
 ```php
 <?php
+
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use Domain\Map\Contracts\LocatorContract as Locator;
-use Domain\Shared\ValueObjects\IP;
+Domain\Map\Contracts\LocatorContract as Locator
 
 class GeoCodingController extends Controller
 {
     public function index(Request $request, Locator $locator) {
-        $map_position = $locator->findByIp(new IP($request->ip()));
+        $map_position = $locator->findByIp($request->ip());
 
         $properties = Properties::near($map_position)->get();
 
         return PropertiesResource::collection($properties);
     }
+
+
 ```
-
-Ahora podemos decir que tenemos código limpio con 3 líneas que hacen todo lo que necesitamos en nuestra primera fase de la feature _(quedaría el tema de captura de excepciones, cambio de servicio en condiciones de timeout pero para mantener el artículo centrado en patrones de diseño no me voy a meter en este asunto aún)_
-
-Aquí puedes ver las implementaciones de cada clase separada:
-
-`MapBoxLocator.php`
-
-```php
-<?php
-//...
-namespace Application\Map\Services\Locator;
-use Domain\Map\Contracts\LocatorContract;
-
-class MapBoxLocator implements LocatorContract
-{
-    private array $config;
-
-    public function __construct(array $config): void {
-        //...
-    }
-
-    public function fromIp(IP $ip): MapPosition {
-         $location = $this->findByIp($ip);
-
-        return new MapPosition(
-            $location['country'],
-            $location['state_or_province'],
-            $location['city_name'],
-            $location['lat'],
-            $location['lng']
-        );
-    }
-    //...
-}
-```
-
-`GoogleMapsLocator.php`
-
-````php
-<?php
-//...
-namespace Application\Map\Services\Locator;
-use Domain\Map\Contracts\LocatorContract;
-
-class GoogleMapsLocator implements LocatorContract
-{
-    private array $config;
-
-    public function __construct(array $config): void {
-        //...
-    }
-
-    public function fromIp(IP $ip): MapPosition {
-         $location = $this->findByIpAddress($ip);
-
-        return new MapPosition(
-            $location['country'],
-            $location['state'],
-            $location['city'],
-            $location['latitude'],
-            $location['longitude']
-        );
-    }
-    //...
-}
-```php
-
-
-
-
-````
