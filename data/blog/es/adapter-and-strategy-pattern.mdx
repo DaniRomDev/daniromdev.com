@@ -234,7 +234,7 @@ class GeoCodingController extends Controller
 
 Ahora podemos decir que tenemos código limpio con 3 líneas que hacen todo lo que necesitamos en nuestra primera fase de la feature _(quedaría el tema de captura de excepciones, cambio de servicio en condiciones de timeout pero para mantener el artículo centrado en patrones de diseño no me voy a meter en este asunto aún)_
 
-Aquí puedes ver las implementaciones de cada clase separada:
+Aquí puedes ver las implementaciones de cada clase separada, ten en cuenta que han sido simplificadas para beneficio del artículo pero la implementación puede ser tan compleja como lo necesites, lo importante es que cumplan el contrato de la interfaz:
 
 `MapBoxLocator.php`
 
@@ -269,7 +269,7 @@ class MapBoxLocator implements LocatorContract
 
 `GoogleMapsLocator.php`
 
-````php
+```php
 <?php
 //...
 namespace Application\Map\Services\Locator;
@@ -296,9 +296,65 @@ class GoogleMapsLocator implements LocatorContract
     }
     //...
 }
+```
+
+No solo obtenemos un código limpio sino también reutilizable, ahora podremos usarlo en otras partes de nuestra aplicación como por ejemplo un comando de consola desde Laravel:
+
+```bash
+php artisan geolocator:ip 169.165.84.191
+```
+
 ```php
+<?php
 
+namespace App\Console\Commands;
 
+use Illuminate\Console\Command;
+use Domain\Shared\ValueObjects\IP;
+use Domain\Map\Contracts\LocatorContract as Locator;
 
+class GeoLocatorFromIp extends Command
+{
+    /**
+     * The name and signature of the console command.
+     *
+     * @var string
+     */
+    protected $signature = 'geolocator:ip {ip}';
 
-````
+    /**
+     * The console command description.
+     *
+     * @var string
+     */
+    protected $description = 'Command description';
+
+    /**
+     * Create a new command instance.
+     *
+     * @return void
+     */
+    public function __construct()
+    {
+        parent::__construct();
+    }
+
+    /**
+     * Execute the console command.
+     *
+     * @return int
+     */
+    public function handle(LocatorContract $locator)
+    {
+           $map_position = $locator->findByIp(new IP($this->argument('ip'));
+
+        //Do your stuff...
+    }
+}
+```
+
+### Creando los tests
+
+Espero que hayas podido entender la base para este patrón Adapter y empezar a hacer tus propias implementaciones haciendo tu código no solo mas corto sino también tolerable al cambio y reutilizable a través de tu aplicación.
+
+## Strategy pattern
