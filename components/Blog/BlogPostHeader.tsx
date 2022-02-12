@@ -17,8 +17,7 @@ const BlogPostHeader: React.FC<{ post: Blog; locale: Locales }> = ({
     </div>
     <p className="mt-2 text-sm text-gray-600 dark:text-gray-400 min-w-32 md:mt-0">
       {post.readingTime.text}
-      {` • `} <ViewCounter slug={post.slug} lang={Locales[locale as string]} />{' '}
-      views
+      {` • `} <ViewCounter slug={post.slug} lang={Locales[locale]} /> views
     </p>
   </div>
 )

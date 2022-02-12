@@ -25,7 +25,7 @@ const BlogPost: React.FC<{ post: Blog }> = ({ children, post }) => {
       />
 
       <div className="w-full mt-4 prose dark:prose-dark max-w-none">
-        <BlogPostHeader post={post} locale={locale} />
+        <BlogPostHeader post={post} locale={Locales[locale as string]} />
         {children}
       </div>
     </>
