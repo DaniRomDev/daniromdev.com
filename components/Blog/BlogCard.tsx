@@ -1,14 +1,16 @@
 import { Blog } from '.contentlayer/types'
+import ViewCounter from 'components/Common/ViewCounter'
 import { EyeIcon } from 'components/Shared/Icons'
 import { H4 } from 'components/Shared/Titles'
 import { useTranslation } from 'hooks/useTranslation'
 import Link from 'next/link'
+import { Locales } from 'services/i18n'
 import CategoryBadge from './CategoryBadge'
 
 const BlogCard: React.FC<{
   post: Pick<Blog, 'slug' | 'title' | 'summary' | 'publishedAt' | 'categories'>
 }> = ({ post }) => {
-  const { translate } = useTranslation()
+  const { translate, locale } = useTranslation()
 
   return (
     <div className="max-w-4xl px-10 py-6 mx-auto rounded-lg shadow-md text-gray-900 bg-white border border-gray-200 dark:border-gray-900 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800 dark:text-gray-100">
@@ -39,7 +41,11 @@ const BlogCard: React.FC<{
           <a className="text-blue-500">{translate('Read more')}</a>
         </Link>
         <div className="flex justify-around">
-          <EyeIcon /> <span className="ml-1">0</span>
+          <EyeIcon />{' '}
+          <span className="ml-1">
+            {' '}
+            <ViewCounter slug={post.slug} lang={Locales[locale as string]} />
+          </span>
         </div>
       </div>
     </div>
