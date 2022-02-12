@@ -7,5 +7,5 @@ export const useTranslation = () => {
   const translate = (text: string): string =>
     t(text, Locales[(locale || defaultLocale) as string])
 
-  return { Locales, translate }
+  return { Locales, translate, locale }
 }

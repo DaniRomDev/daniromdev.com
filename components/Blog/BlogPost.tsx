@@ -1,9 +1,17 @@
 import Meta from 'components/Shared/Meta'
 import type { Blog } from '.contentlayer/types'
+import { useEffect } from 'react'
+import { useRouter } from 'next/router'
+import { Locales } from 'services/i18n'
 import config from 'config'
 import BlogPostHeader from './BlogPostHeader'
+import useRegisterBlogPostViewCount from 'hooks/useRegisterBlogPostViewCount'
 
 const BlogPost: React.FC<{ post: Blog }> = ({ children, post }) => {
+  const { locale } = useRouter()
+
+  useRegisterBlogPostViewCount(post, Locales[locale as string])
+
   return (
     <>
       <Meta
