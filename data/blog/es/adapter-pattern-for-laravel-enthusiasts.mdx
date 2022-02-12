@@ -1,6 +1,6 @@
 ---
 title: 'Patron de diseño Adapter para entusiastas de Laravel'
-publishedAt: '2022-02-06'
+publishedAt: '2022-02-12'
 summary: 'Cuando uno empieza en este mundo de la programación a tirar sus primeras líneas de código ni siquiera se plantea una forma mejor de hacer las cosas'
 image: '/static/images/all-start-here/og.png'
 categories: 'laravel,php'
@@ -172,9 +172,7 @@ return [
 
 Una vez hecho esto y centralizada la configuración de mis servicios de mapas, puedo definir el bind de mi interfaz para determinar la implementación de clase necesaria según el locator activo que tengo definido en mi archivo de configuración.
 
-`App\Providers\AppServiceProvider.php`
-
-```php:AppServiceProvider.php
+```php:App\Providers\AppServiceProvider.php
 <?php
 
 namespace App\Providers;

@@ -1,10 +1,703 @@
 ---
 title: 'Adapter pattern for Laravel enthusiasts'
-publishedAt: '2022-02-06'
-summary: ''
+publishedAt: '2022-02-12'
+summary: "When you start in this world of programming and start throwing out your first lines of code, you don't even think about a better way of doing things."
 image: '/static/images/all-start-here/og.png'
 categories: 'laravel,php'
 language: 'en'
 ---
 
 Source of inspiration to write this article: [Colin Decarlo - Design Patterns with Laravel](https://www.youtube.com/watch?v=e4ugSgGaCQ0)
+
+# Design patterns when you start
+
+When you start in this world of programming to throw out your first lines of code you don't even consider a better way of doing things, you are so focused on learning the syntax of the programming language and how the pieces fit together to make a simple HTTP request or iterate an array that you completely forget about clean code.
+
+**AND IT'S OK**
+
+We all suffer this initiation and until we don't mechanize the process of programming in our fingers and in our mind we don't think about going a step further.
+When you want to improve and start reading articles or see examples of [clean code](https://refactoring.guru/refactoring/what-is-refactoring) because in your work or hobby project you have a controller with more than 800 lines and you don't know how the situation has gotten out of control you find this topic of 'Design Patterns' where in most of them it hits you so hard in the face that you ask yourself again if you really know how to program.
+
+**AND IT'S OK**
+
+In my experience many of the design patterns that we learn at the beginning we don't really know how to apply them in a real case or which one to choose, in this article I will show you two of the big players in this world: [Adapter Pattern](https://refactoring.guru/design-patterns/strategy) & [Strategy Pattern](https://refactoring.guru/design-patterns/adapter)
+
+## Before you start
+
+You will see many of the examples using hexagonal architecture concepts such as 'Domain' or 'Application', please disregard them since
+they are not being applied here 100% decoupled from the framework.
+
+## Adapter
+
+This pattern belongs to the structural category and according to [refactoring.guru](https://refactoring.guru) the accurate definition is: **_Structural patterns explain how to assemble objects and classes into larger structures while keeping these structures flexible and efficient._**
+
+**_Adapter is a structural design pattern that allows objects with incompatible interfaces to collaborate_**
+
+What would be a good use case where we really need this pattern when applying it to our code base?
+
+### Communication with third party services
+
+The most used case for this pattern is the communication with third party services such as Google maps Api, Stripe, an external database to obtain zip codes, etc. All communication with external services where we are not responsible for its operation.
+
+#### Benefits
+
+- Dependency inversion (they have to comply with the interface they implement of our business)
+- Change implementation in a simple way (Instead of Google maps I can change to Mapbox with a simple variable)
+- Easy to test (I don't have to communicate with their services, just test the rules of my interface that will make my tests much faster and reliable)
+
+### Practical example with PHP
+
+Although I will use PHP, the design patterns apply to all languages in a similar way so only syntax issues will change if you use another language like Typescript for example.
+
+---
+
+**_Our application needs the geolocation data to determine the proximity of the properties that are for rent according to the user's location, we will use as main service Google Geocoding Api but if their infrastructure goes down we want to switch to Mapbox and continue providing the same service._**
+
+---
+
+Imagine we have to implement this new feature in our app, most of them will start throwing code like, I create a class for the Google service and another for Mapbox and when we need to change we call the constructor of the other, blah blah blah...
+
+**_Note:_** _The classes of the following services do not represent real Google maps or Mapbox functions, it is only to represent the integration of this pattern_.
+
+And we are left with a thing like this:
+
+```php:GeoCodingController.php
+<?php
+
+namespace App\Http\Controllers;
+
+use Illuminate\Http\Request;
+
+class GeoCodingController extends Controller
+{
+    public function index(Request $request) {
+         $locator = new \GoogleApiService($request);
+         $location = $locator->findByIpAddress($request->ip());
+
+        $map_position = new MapPosition(
+            $location['country'],
+            $location['state'],
+            $location['city'],
+            $location['latitude'],
+            $location['longitude']
+        );
+
+        $properties = Properties::near($map_position)->get();
+
+        return PropertiesResource::collection($properties);
+    }
+
+    // Si quisieramos cambiar a Mapbox se nos quedaría algo así por ejemplo
+    public function index(Request $request) {
+        $locator = new \MapBoxApiService($request);
+        $location = $locator->findByIp($request->ip());
+
+        $map_position = new MapPosition(
+            $location['country'],
+            $location['state_or_province'],
+            $location['city_name'],
+            $location['lat'],
+            $location['lng']
+        );
+
+        $properties = Properties::near($map_position)->get();
+
+        return PropertiesResource::collection($properties);
+    }
+}
+```
+
+At first glance it seems that everything is correct and does its job but we have some problems:
+
+- The controller knows about the implementation of the service and is receiving the Request object from the framework to initialize itself _(this code is an example but I have seen it in real cases)_.
+- Although it is true that we use our MapPosition class of our App in both cases to represent the position on the map, the method to obtain the data from the service is called differently so we not only have to change the class to initialize, but the method to call _(In one is findByIpAddress and in the other findByIp)_.
+- The parameters that MapPosition receives have to be changed according to the service to use _(location['state'] by location['state_or_province'])_.
+
+### Applying the Adapter pattern in this case
+
+As we saw a moment ago, it is already more than one part of the code that we have to change in our controller to be able to use the localization. Before applying it we must define what kind of interface these services will use in common since it will be used as 'Adapter' between the response of the third party service and the code of our app.
+We could start with something like this:
+
+```php:LocatorContract.php
+<?php
+// Los namespaces y clases no tienen porque ser igual en tu app
+namespace Domain\Map\Contracts;
+
+use Domain\Map\MapPosition;
+use Domain\Shared\ValueObjects\IP
+
+interface LocatorContract
+{
+    /**
+     * @param IP $ip
+     * @return MapPosition $map_position - The map position data
+     */
+    public function fromIp(IP $ip): MapPosition;
+}
+```
+
+This interface does define our business logic since the functionality we want is to obtain the position of the user's map through its IP, how it is done depends on the implementation we want to use.
+
+Well, once we have defined the common contract that both services will have, we can use the dependency inversion with the [Laravel service container](https://laravel.com/docs/9.x/container) to our advantage.
+
+First I will take advantage of the configuration file system provided by the Laravel framework to obtain the important data that each implementation will need.
+
+```php:app\config\map.php
+<?php
+return [
+    'locator' => 'mapbox',
+    'drivers' => [
+        'mapbox' => [
+            'url' => 'https://api.mapbox.com',
+            'version' => 'v5',
+            'params' => [
+                'language' => 'es',
+                'country' => 'es',
+                'access_token' => env('MAPBOX_TOKEN'),
+            ],
+        ],
+         'google_maps' => [
+            'url' => 'https://maps.googleapis.com/maps/api',
+            'version' => 'v2',
+            'params' => [
+                'language' => 'es',
+                'country' => 'es',
+                'access_token' => env('GOOGLE_API_TOKEN'),
+            ],
+        ]
+    ]
+];
+
+```
+
+Once this is done and the configuration of my map services is centralized, I can define the bind of my interface to determine the necessary class implementation according to the active locator I have defined in my configuration file.
+
+```php:App\Providers\AppServiceProvider.php
+<?php
+
+namespace App\Providers;
+
+
+use Illuminate\Support\ServiceProvider;
+use Application\Map\Services\Locator\{MapBoxLocator, GoogleMapsLocator};
+use Domain\Map\Contracts\LocatorContract;
+use RuntimeException;
+
+class AppServiceProvider extends ServiceProvider
+{
+    /**
+     * Register any application services.
+     *
+     * @return void
+     */
+    public function register()
+    {
+        $this->app->singleton(LocatorContract::class, function ($app) {
+            $map_config = $app->make('config')->get('map');
+            $locator = $map_config['locator'];
+
+            switch ($locator) {
+                case 'mapbox':
+                    return new MapBoxLocator($map_config['drivers'][$locator]);
+                case 'google_maps':
+                    return new GoogleMapsLocator($map_config['drivers'][$locator]);
+                default:
+                    throw new RuntimeException("The map locator is not defined in the config file");
+            }
+        });
+    }
+```
+
+You could apply a small refactor and directly define the driver configuration in the constructor of each class and simply instantiate but things could change in the short/medium term and this configuration could have another source and not the Laravel framework for example. This is already according to the needs of the project.
+
+### Cleaning up our driver using our Adapter pattern
+
+If we apply these changes to our controller we can see that we have something cleaner and more tolerable to change than at the beginning:
+
+```php:GeoCodingController.php
+<?php
+namespace App\Http\Controllers;
+
+use Illuminate\Http\Request;
+use Domain\Map\Contracts\LocatorContract as Locator;
+use Domain\Shared\ValueObjects\IP;
+
+class GeoCodingController extends Controller
+{
+    public function index(Request $request, Locator $locator) {
+        $map_position = $locator->findByIp(new IP($request->ip()));
+
+        $properties = Properties::near($map_position)->get();
+
+        return PropertiesResource::collection($properties);
+    }
+```
+
+Now we can say that we have clean code with 3 lines that do everything we need in our first phase of the feature _(there would be the issue of exception catching, service change in timeout conditions but to keep the article focused on design patterns I am not going to get into this issue yet)_.
+
+Here you can see the implementations of each separate class, note that they have been simplified for the benefit of the article but the implementation can be as complex as you need, the important thing is that they comply with the interface contract:
+
+```php:MapBoxLocator.php
+<?php
+//...
+namespace Application\Map\Services\Locator;
+use Domain\Map\Contracts\LocatorContract;
+
+class MapBoxLocator implements LocatorContract
+{
+    private array $config;
+
+    public function __construct(array $config): void {
+        //...
+    }
+
+    public function fromIp(IP $ip): MapPosition {
+         $location = $this->findByIp($ip);
+
+        return new MapPosition(
+            $location['country'],
+            $location['state_or_province'],
+            $location['city_name'],
+            $location['lat'],
+            $location['lng']
+        );
+    }
+    //...
+}
+```
+
+```php:GoogleMapsLocator.php
+<?php
+//...
+namespace Application\Map\Services\Locator;
+use Domain\Map\Contracts\LocatorContract;
+
+class GoogleMapsLocator implements LocatorContract
+{
+    private array $config;
+
+    public function __construct(array $config): void {
+        //...
+    }
+
+    public function fromIp(IP $ip): MapPosition {
+         $location = $this->findByIpAddress($ip);
+
+        return new MapPosition(
+            $location['country'],
+            $location['state'],
+            $location['city'],
+            $location['latitude'],
+            $location['longitude']
+        );
+    }
+    //...
+}
+```
+
+Not only we get a clean code but also reusable code, now we can use it in other parts of our application such as a console command from Laravel:
+
+```bash
+php artisan geolocator:ip 169.165.84.191
+```
+
+```php:GeoLocatorFromIp
+<?php
+
+namespace App\Console\Commands;
+
+use Illuminate\Console\Command;
+use Domain\Shared\ValueObjects\IP;
+use Domain\Map\Contracts\LocatorContract as Locator;
+
+class GeoLocatorFromIp extends Command
+{
+    /**
+     * The name and signature of the console command.
+     *
+     * @var string
+     */
+    protected $signature = 'geolocator:ip {ip}';
+
+    /**
+     * The console command description.
+     *
+     * @var string
+     */
+    protected $description = 'Command description';
+
+    /**
+     * Create a new command instance.
+     *
+     * @return void
+     */
+    public function __construct()
+    {
+        parent::__construct();
+    }
+
+    /**
+     * Execute the console command.
+     *
+     * @return int
+     */
+    public function handle(LocatorContract $locator)
+    {
+           $map_position = $locator->findByIp(new IP($this->argument('ip'));
+
+        //Do your stuff...
+    }
+}
+```
+
+### Conclusion with some real examples
+
+I hope you have been able to understand the basis for this Adapter pattern and start making your own implementations making your code not only shorter but also tolerable to change and reusable throughout your application.
+Here I share some examples that I have had to implement in real projects for your inspiration:
+
+#### Adapter for Invoice service with [XERO](https://www.xero.com/).
+
+`Implementation of XeroService using the InvoiceServiceAdapter`
+
+```php:InvoiceServiceAdapter.php
+<?php
+
+namespace Domain\Invoices\Services;
+
+use Domain\Invoices\Models\Invoice;
+
+interface InvoiceServiceAdapter
+{
+    public function createOrUpdate(Invoice $invoice): Invoice;
+    public function markInvoiceAsPaid(Invoice $invoice): Invoice;
+    public function issueInvoice(Invoice $invoice): Invoice;
+}
+
+```
+
+As you can see we respect the interface by creating the implementation of the methods but each service acts differently so we can create as many functions here as we need to be able to perform the communication successfully respecting our business logic. **_(\_construct, switchBankAccount, useDefaultBankAccount)_\*\***
+
+```php:XeroService.php
+<?php
+
+namespace Application\Invoices\Services\Xero;
+
+use Application\Invoices\Services\Xero\DTOS\XeroConfigurationDTO;
+use Domain\Invoices\Models\Invoice;
+use Domain\Invoices\Services\InvoiceServiceAdapter;
+
+class XeroService implements InvoiceServiceAdapter
+{
+    public string $bank_account;
+
+    public function __construct(protected XeroConfigurationDTO $configuration)
+    {
+        $this->bank_account = $configuration->accounting->bank_account_name;
+    }
+
+    public function createOrUpdate(Invoice $invoice): Invoice
+    {
+    //@TODO - Do your xero stuff here
+        return $invoice;
+    }
+
+    public function markInvoiceAsPaid(Invoice $invoice): Invoice
+    {
+        //@TODO - Do your xero stuff here
+        return $invoice;
+    }
+
+    public function issueInvoice(Invoice $invoice): Invoice
+    {
+        //@TODO - Do your xero stuff here
+        return $invoice;
+    }
+
+
+    /** Allow switch to another bank account to use in the next operations
+     * @param string $bank_account - Active bank account to make the operations
+     * @return self
+     */
+    public function switchBankAccount(string $bank_account): self
+    {
+        $this->bank_account = $bank_account;
+
+        return $this;
+    }
+
+    /**
+     * Return to the default bank account defined on the configuration file
+     * @return self
+     */
+    public function useDefaultBankAccount(): self
+    {
+        $this->bank_account = $this->configuration->accounting->bank_account_name;
+
+        return $this;
+    }
+}
+```
+
+```php:InvoiceServiceProvider.php
+//...
+ public function register()
+    {
+        $this->app->singleton(InvoiceServiceAdapter::class, function ($app) {
+        // I hide the real application name on <your-project>, replace it with the name of yours.
+            $invoice_services = $app->make('config')->get('<your-project>.services.invoices');
+            $service = $invoice_services['actual'];
+
+            switch ($service) {
+                case 'xero':
+                    return new XeroService(XeroConfigurationDTO::fromConfigFile($invoice_services['drivers'][$service]));
+                default:
+                    throw new RuntimeException("The invoice service selected '{$service}' is not supported");
+            }
+        });
+    }
+
+    //...
+```
+
+Some very basic initial tests to see if what we have built so far works.
+
+```php:XeroServiceTest.php
+<?php
+
+namespace Tests\Unit\Application\Invoices\Services\Xero;
+
+use Application\Invoices\Services\Xero\DTOS\XeroConfigurationDTO;
+use Application\Invoices\Services\Xero\XeroService;
+use Domain\Invoices\Services\InvoiceServiceAdapter;
+use Tests\TestCase;
+
+class XeroServiceTest extends TestCase
+{
+    protected array $config;
+
+    public function setUp(): void
+    {
+        parent::setUp();
+
+        $this->config = [
+            'oauth' => [
+                'client_id' => '1000200',
+                'client_secret' => 'YYYumdDd1192912291',
+            ],
+            'webhook' => [
+                'signing_key' => "uuTWsis8111j1k",
+            ],
+            'accounting' => [
+                'bank_account_name' => 'Stripe account',
+            ],
+            'credential_file' => storage_path('framework/xero/xero.json')
+        ];
+    }
+
+    public function test_dto_from_config_file()
+    {
+        $dto = XeroConfigurationDTO::fromConfigFile($this->config);
+
+        $this->assertInstanceOf(XeroConfigurationDTO::class, $dto);
+
+        $this->assertEquals($dto->oauth->client_id, '1000200');
+        $this->assertEquals($dto->oauth->client_secret, 'YYYumdDd1192912291');
+        $this->assertEquals($dto->webhook->signing_key, 'uuTWsis8111j1k');
+        $this->assertEquals($dto->accounting->bank_account_name, 'Stripe account');
+        $this->assertEquals($dto->credential_file, storage_path('framework/xero/xero.json'));
+    }
+
+    public function test_switch_bank_account()
+    {
+        $xeroService = $this->instantiateXeroService($this->config);
+
+        $this->assertInstanceOf(XeroService::class, $xeroService);
+
+        $this->assertEquals($xeroService->bank_account, $this->config['accounting']['bank_account_name']);
+
+        $xeroService->switchBankAccount("New bank account");
+        $this->assertEquals($xeroService->bank_account, "New bank account");
+
+        $xeroService->useDefaultBankAccount();
+        $this->assertEquals($xeroService->bank_account, $this->config['accounting']['bank_account_name']);
+    }
+
+    public function test_switch_bank_account_can_be_chained()
+    {
+        $xeroService = $this->instantiateXeroService($this->config);
+
+        $this->assertInstanceOf(XeroService::class, $xeroService);
+
+        $xeroService->switchBankAccount('Tide business')->useDefaultBankAccount();
+
+        $this->assertEquals($xeroService->bank_account, $this->config['accounting']['bank_account_name']);
+
+        $xeroService->useDefaultBankAccount()->switchBankAccount('Tide business');
+        $this->assertEquals($xeroService->bank_account, 'Tide business');
+    }
+
+    private function instantiateXeroService(array $config): XeroService
+    {
+        return new XeroService(XeroConfigurationDTO::fromConfigFile($config));
+    }
+}
+
+```
+
+### Adapter for Locator service
+
+```php:LocatorServiceAdapter.php
+<?php
+
+namespace Domain\Map\Contracts;
+
+use Domain\Map\DTOs\LocatorDTO;
+
+interface LocatorServiceAdapter
+{
+    /**
+     * @param float $longitude
+     * @param float latitude
+     *
+     * @return LocatorDTO $dto - The data transfer object with the generic locator data
+     */
+    public function fromCoordinates(float $longitude, float $latitude): LocatorDTO;
+}
+```
+
+This is a more complete example to call the MapBox service where we respect the interface method but the specific implementation lives only in this class.
+
+```php:MapBoxLocatorService.php
+<?php
+
+namespace Application\Map\Services\Locator;
+
+use Illuminate\Http\Client\Response;
+use Illuminate\Support\Facades\Http;
+use Domain\Map\DTOs\LocatorDTO;
+use Domain\Map\Contracts\LocatorContract;
+use stdClass;
+use Exception;
+
+class MapBoxLocator implements LocatorAdapterService
+{
+    /**
+     * @param array $config - The configuration values for the MapBox driver
+     */
+    public function __construct(protected array $config)
+    {
+    }
+
+    public function fromCoordinates(float $longitude, float $latitude): LocatorDTO
+    {
+        $response = $this->doRequest($this->reverseGeocodingEndpoint($longitude, $latitude));
+
+        if ($response->ok()) {
+            return $this->transformGeocodingResponse($response);
+        }
+
+        $response->throw();
+    }
+
+    /**
+     * Transform a succesfull response from MapBox geocoding service into our LocatorDTO
+     * @param Response $response
+     * @return LocatorDTO $dto - Contains the Locator data to reuse in the app.
+     */
+    protected function transformGeocodingResponse(Response $response): LocatorDTO
+    {
+        $geocoding_data = $this->findTypesOnFeatureCollection((object)$response->json(), ['address', 'postcode', 'region']);
+
+        return new LocatorDTO(
+            latitude: $geocoding_data->latitude,
+            longitude: $geocoding_data->longitude,
+            address: $geocoding_data->address,
+            postcode: $geocoding_data->postcode,
+            region: $geocoding_data->region
+        );
+    }
+
+    /**
+     * Find a specific type of data on the collection that comes inside the response
+     * to transform into a better readable structure.
+     * @param mixed $feature_collection - Collection of data from geocoding service
+     * @param array $target_types - Types we want to find (address, region, postcode, etc.)
+     *
+     * @return stdClass $geocoding_data - Geocoding data transformed into a manageable object
+     */
+    private function findTypesOnFeatureCollection(
+        mixed $feature_collection,
+        array $target_types = ['address', 'postcode']
+    ): stdClass {
+
+        $values = [
+            'longitude' => $feature_collection->query[0],
+            'latitude' => $feature_collection->query[1]
+        ];
+
+        foreach ($feature_collection->features as $feature) {
+            $place_type = $feature['place_type'][0];
+            $key = $place_type === 'address' ? 'place_name' : 'text';
+
+            if (in_array($place_type, $target_types)) {
+                $values[$place_type] = $feature["{$key}_{$this->config['params']['language']}"];
+            }
+        }
+
+        return (object)$values;
+    }
+    /**
+     * @param float $longitude
+     * @param float $latitude
+     * @param array $params - Extra parameters on the endpoint
+     *
+     * @return string $endpoint - The Reverse geocoding endpoint ready to use on an http call
+     */
+    protected function reverseGeocodingEndpoint(float $longitude, float $latitude, array $params = []): string
+    {
+        $params = $this->config['params'] + $params;
+
+        return "{$this->buildBaseURL('geocoding')}/mapbox.places/{$longitude},{$latitude}.json?" . http_build_query($params);
+    }
+
+    /**
+     * Do an Http request to the selected endpoint
+     * @param string $endponit - The entire url endpoint to make the call
+     * @return Response $response - The Http client Response
+     */
+    private function doRequest(string $endpoint): Response
+    {
+        return Http::get($endpoint);
+    }
+
+    /**
+     * Build the base URL for the mapbox API based on the configuration defined
+     * @param string $service - The service we want to use
+     * @return string $url - The base url to make the calls on this service.
+     */
+    private function buildBaseURL(string $service = 'geocoding'): string
+    {
+        return "{$this->config['url']}/{$service}/{$this->config['version']}";
+    }
+}
+```
+
+Dependency inversion in Laravel is quite easy and almost all of them are done in the same way, depending on your needs you use singleton, binds or implementations depending on the class where we inject the dependency.
+
+```php:MapServiceProvider.php
+//...
+  public function register()
+    {
+        $this->app->singleton(LocatorContract::class, function ($app) {
+            $config = $app->make('config')->get('map');
+
+            switch ($config['locator']) {
+                case 'mapbox':
+                    return new MapBoxLocator($config['drivers'][$config['locator']]);
+                default:
+                    throw new RuntimeException("No map locator is defined in the config file");
+            }
+        });
+    }
+    //...
+```
