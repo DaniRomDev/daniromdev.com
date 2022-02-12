@@ -7,7 +7,8 @@ export type Configuration = {
         [name: string]: ExternalLink[]
     }
     accounts: { [name: string]: SocialAccount },
-    analytics: { [platform: string]: AnalyticConfig }
+    analytics: { [platform: string]: AnalyticConfig },
+    database: { [driver: string]: SupabaseClient }
 }
 
 export type ExternalLink = {
@@ -46,6 +47,11 @@ export type SocialAccount = {
 export type AnalyticConfig = {
     domains: string[];
     tracking_code: string
+}
+
+export type SupabaseClient = {
+    url: string;
+    anon_key: string
 }
 
 
@@ -132,6 +138,12 @@ const config: Configuration = {
         fathom: {
             domains: ['daniromdev.com', 'www.daniromdev.com'],
             tracking_code: process.env.NEXT_PUBLIC_FATHOM_TRACKING_CODE as string,
+        }
+    },
+    database: {
+        supabase: {
+            url: process.env.NEXT_PUBLIC_SUPABASE_URL as string,
+            anon_key: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY as string
         }
     }
 }
