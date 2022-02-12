@@ -89,7 +89,8 @@ const config: Configuration = {
         }],
         laravel: [{ href: "https://laravel-news.com", title: "Laravel news " },
         { href: "https://laravel-code.tips/", title: "Laravel code tips" },
-        { href: "https://spatie.be/open-source?search=&sort=-downloads", title: "Spatie open source packages and courses" }
+        { href: "https://spatie.be/open-source?search=&sort=-downloads", title: "Spatie open source packages and courses" },
+        { href: "https://laravelexamples.com/", title: "Laravel real code examples" }
 
         ],
         devOps: [{
