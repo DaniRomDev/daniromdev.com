@@ -12,6 +12,11 @@ export default async function (req: NextApiRequest, res: NextApiResponse) {
             return res.status(501).json({ error })
         }
 
+        res.setHeader(
+            'Cache-Control',
+            'public, s-maxage=1200, stale-while-revalidate=600'
+        );
+
         return res.status(200).json({
             total: page_views ? page_views[0]?.views_count || 0 : 0
         });
