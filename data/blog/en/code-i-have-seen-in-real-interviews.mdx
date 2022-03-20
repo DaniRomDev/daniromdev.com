@@ -1,0 +1,388 @@
+---
+title: 'Código que he visto en entrevistas reales de PHP'
+publishedAt: '2022-03-18'
+summary: 'I share with you some pieces of code that I have seen in real interviews in which I have participated and analyze them in detail'
+image: '/static/images/all-start-here/og.png'
+categories: 'laravel,php'
+language: 'en'
+---
+
+I share with you some pieces of code that I have seen in real interviews in which I have participated and analyze them in detail.
+These last months I have participated in several pair programming sessions in the interview process that we have open to enter our project.
+
+I have been able to detect some repeating patterns and I have decided to share some feedback for you to improve your code as well as some general concepts to keep in mind when we are going to share code with others.
+
+**DISCLAIMER:** The proposed solutions are very basic and you will realize that if you analyze them carefully you will come up with better ways to keep on improvising the code, that is also what I want to achieve, that you do not take this article as the source of truth, I prefer to encourage you to reflect and that you too, as a reader, can rely on your knowledge and experience to come up with better solutions.
+
+- [Static functions on HTTP controllers](#static-functions-on-http-controllers)
+  - [Real code example](#real-code-example)
+  - [Proposed Solution](#proposed-solution)
+    - [Benefits](#benefits)
+- [TODOs](#todos)
+- [Badly organized routes](#badly-organized-routes)
+  - [Proposed Solution](#proposed-solution)
+    - [Benefits](#benefits)
+- [Not using the Laravel framework to your advantage](#not-using-the-laravel-framework-to-your-advantage)
+- [code after a return](#code-after-a-return)
+- [Functions that are created without a second review](#functions-that-are-created-without-a-second-review)
+  - [Proposed Solution](#proposed-solution)
+- [No tests of any kind](#no-tests-of-any-kind)
+- [Classes that receive their own constants and other confusions](#classes-that-receive-their-own-constants-and-other-confusions)
+  - [Proposed Solution](#proposed-solution)
+
+---
+
+# Static functions on HTTP controllers
+
+Controllers are designed to receive an input and return an output. In most cases we will use them to receive a request from the outside to our server and return a response.
+
+Although there is nothing in the programming world that prevents us from creating static functions in a controller, it is not a recommended practice since we do not want to reuse controller functions elsewhere in our application.
+
+## Real code example
+
+```php:CyclistController.php
+class CyclistController extends Controller
+{
+    public static function generate_cyclist_certificate()
+    {
+        $cyclists = Cyclist::whereDate('created_at', '=', Carbon::today()->toDateString())->get();
+        $pdf = PDF::loadView('cyclists.certificate', compact('cyclists', $cyclists));
+
+        return $pdf->stream();
+    }
+
+  //...
+}
+```
+
+This function does not receive any parameters so it is confusing to enter to read a controller, we usually expect at least one Request object. One thing we have for sure,
+a web route or api will not be linked to this method.
+
+Instead, it was in a custom Laravel command:
+
+```php:DailyPDFCertificatesCommand.php
+//...
+public function handle()
+   {
+       CyclistController::generate_cyclist_certificate();
+       echo 'PDF generated successfully.';
+   }
+```
+
+It is true that he thought about code reusability but it was misguided to build that logic into a controller.
+
+## Proposed solution
+
+- Rename the method to camel case
+- Receive cyclist identifiers by Form Request
+- Perform only what the method mentions
+
+```php:CyclistCertificateRequest
+// php artisan make:request CyclistCertificateRequest
+
+ class CyclistCertificateRequest extends FormRequest {
+
+  public function authorize(): bool
+    {
+        return true;
+    }
+
+    public function rules(): array
+    {
+        return [
+            'cyclists' => 'required|exists:cyclists',
+        ];
+    }
+
+ }
+```
+
+```php:CyclistController.php
+class CyclistController extends Controller
+{
+    public function generateCyclistCertificate(CyclistCertificateRequest $request)
+    {
+        $pdf = PDF::loadView('cyclists.certificate', compact('cyclists', Cyclist::find($request->cyclists)));
+
+        return $pdf->stream();
+    }
+
+  //...
+}
+```
+
+### Benefits:
+
+- We can receive cyclist information from any external output and have more control over data validation, filters, etc.
+- The method is only in charge of generating the cyclist certificates as the method names.
+
+Of course this code can be further improved such as creating scopes in the model, a PDF generation service to inject it as a dependency in our classes and so on.
+
+The important thing is the basic concept and how we can continue building from here, before creating a static method in a controller think if there is a better alternative.
+
+---
+
+# TODOs
+
+We have seen that in most of the technical tests there are comments with a TODO in certain parts of the code and in my point of view it is preferable to finish something instead of leaving it pending.
+
+```php
+//..
+ public function index()
+    {
+        // TODO: implement a return of the actual index blade view
+        return 'Please select the CSV file to upload.';
+    }
+
+/..
+```
+
+We are human and we make mistakes of course, we can forget after working on another part of the application and completely forget to go back to that place.
+
+It has never been a strong reason to reject a candidate but if you can avoid it, avoid it, as it gives me to understand that you have a lack of organization when you start coding.
+
+---
+
+# Badly organized routes
+
+The Laravel framework gives us multiple ways to structure the routing of our app, such as grouping, prefixes, middlewares, etc.
+
+```php:web.php
+Route::get('insertRiders', [CsvReaderController::class, 'manageCSV']);
+Route::get('riders', [RidersController::class, 'getRiders']);
+Route::get('ridersPDF', [RidersController::class, 'getRidersPDF']);
+Route::get('rider/{id}', [RidersController::class, 'getRider']);
+Route::get('riderPDF/{id}', [RidersController::class, 'getRiderPDF']);
+```
+
+In this example we see how it only uses the GET verb even to do insert operations but the most detrimental thing here is the way
+of naming the routes, more information in [Resource naming](https://restfulapi.net/resource-naming/)
+
+It is true that Laravel's **web.php** file is not for creating Restful APIs but still in my opinion, we should bring these concepts when naming web routes with certain nuances
+since we have to take into account SEO and UX when creating user friendly urls.
+
+It is not the same for the web:
+
+```php
+// 190 no nos da ningun tipo de informacion
+https://riders.com/rider/190
+// Accedemos a traves del nombre por lo que se hace muy facil compartirla si es necesario
+https://riders.com/rider/manuel-lopez
+```
+
+## Proposed solution
+
+```php: web.php
+Route::prefix('riders', function(){
+    Route::get('/', [RidersController::class, 'index'])->name('riders.list');
+    Route::get('{id}', [RidersController::class, 'show'])->name('riders.detail');
+    Route::get('{id}/pdf', [RidersController::class, 'generateRiderLicense'])->name('rider.license');
+
+    Route::post('/', [RidersController::class, 'store'])->name('riders.store');
+});
+
+```
+
+### Benefits
+
+- Rider routes are located in a single place.
+- HTTP verbs are used to clarify the action we perform on the route.
+- We follow a standard structure for our riders resource
+- We can access our routes through the name, e.g: **route('rider.license')** so if we modify the url, our route name will always be the same.
+
+---
+
+# Not using the Laravel framework to your advantage
+
+A few examples that are repeated quite a lot in the technical test:
+
+```php
+Rider::where('id', $id)->first();
+
+// Better
+Rider::find($id);
+// or if we need to catch error for ModelNotFound
+Rider::findOrFail($id);
+```
+
+```php
+// The double slash only works on windows system (\\riders.csv) and throws error on unix ones
+storage_path() . '\\riders.csv'
+
+//Let handle the Storage facade the cross compatibility on filesystems
+Storage::get('riders.csv')
+```
+
+```php
+date("Y-m-d H:i:s", strtotime('now'))
+
+//Better use the Carbon helper
+now();
+```
+
+I'm sure I'm missing a few more but I hope you get the idea.
+
+---
+
+# Code after a return
+
+This one doesn't need much explanation, just don't do it at home:
+
+```php
+//...
+public function showLicense(Request $request, string $id){
+		if (array_key_exists($id, User::tmpUsers)) {
+			$pathFile = storage_path('app\licenses\\'.User::tmpUsers[$id]['pdfLicense']);
+			if (file_exists($pathFile)) {
+				return response()->file($pathFile);
+			}
+		}
+
+		return view('welcome');
+		error_log(User::tmpUsers[$id]['pdfLicense']);
+		error_log(array_key_exists($id, User::tmpUsers));
+	}
+```
+
+# Functions that are created without a second review
+
+We can identify that:
+
+- The only parameter that changes is the user role.
+- We don't know what type it is or what $logData contains in this function.
+- Extra database calls are made
+- A return is made without anything
+
+```php
+// ...
+    public static function notifyAdmins($logData)
+    {
+        $admins = User::where('role', 'admin')->get();
+
+        foreach($admins as $admin)
+        {
+            $admin = User::find($admin->id);
+            $admin->notify(new RiderRegisterLog($logData));
+        }
+        return;
+    }
+
+    /**
+     * Sends a log mail to partners
+     */
+    public static function notifyPartners($logData)
+    {
+        $partners = User::where('role', 'partner')->get();
+
+        foreach($partners as $partner)
+        {
+            $partner = User::find($partner->id);
+            $partner->notify(new RiderRegisterLog($logData));
+        }
+        return;
+    }
+```
+
+## Proposed solution
+
+- Create a single function
+- Use a[ Data Transfer Object](https://github.com/spatie/data-transfer-object) for the logData parameter, we have content information and we get autocompletion in our IDE
+- Pass the role as parameter to the function _(it could even be enum for more restriction)_.
+- Eliminate the extra database call, we already have the user model.
+- Iterate directly in our query
+- Type the function as void and eliminate the empty return
+
+```php
+//..
+ public static function notifyRiders(LogDataDTO $dto, string $role): void
+    {
+         User::where('role', $role)
+            ->get()
+            ->each(fn (User $user) => $user->notify(new RiderRegisterLog($dto)));
+    }
+```
+
+---
+
+# No tests of any kind
+
+This is a controversial topic but we understand that in technical testing they use their free time and concentrate on completing as many features as possible,
+We always make it clear in our process that we prefer that they complete less features but that they are tested, at least one attempt. We will then have the pair programming session to add new features or improve existing ones.
+
+Tests are important, and as you advance as a programmer you realize that without having a good suite of tests _(Unitary, integration, End to end...)_ you can't go to production with confidence and you end up fixing bugs that could have been avoided with the proper tests.
+with the appropriate tests. It will not be the first or the last time that I have rethought how to perform the functionality while creating the test or discovered a bug thinking that my tests were going to pass correctly.
+
+[Laravel](https://laravel.com/docs/9.x/testing#main-content) nos proporciona una buena cantidad de assert y abstracciones encima de PHPunit para hacer nuestra vida mas fácil, usenla a vuestro favor.
+
+# Classes that receive their own constants and other confusions
+
+It is something that we have also detected and we believe that it fails because there is not a previous reflection before why I need this class and how I am going to use it in my application, here is an example:
+
+```php
+   if($download){
+            return $this->apiResponseService->getResponse(
+                $this->apiResponseService::_SUCCESS_STATUS_CODE,
+                "File successfully saved",
+                [],
+                200
+            );
+        }
+        return $this->apiResponseService->getResponse(
+            $this->apiResponseService::_SUCCESS_STATUS_CODE,
+            "An error occurred during the file download",
+            [],
+            400
+        );
+```
+
+We can observe that it is a bit confusing to read because although only the first one is a successful response, the second one also receives a status code 'SUCCESS' already exists
+as a constant of itself.
+
+The intention was correct, I create a class that will be injected as a service to reuse but when it comes to use it is when it seems to bring more problems than benefits.
+
+## Proposed solution
+
+I'm not a fan of creating a service for HTTP responses from a Rest API right off the bat, I think I would start by modifying the **[Response](https://laravel.com/docs/9.x/responses#response-macros)** class macro that the framework itself already provides.
+
+If it will need additional complexity then we would discuss whether to create a trait with additional functions to use in the controllers or any other path I take with the development team.
+
+Below is a very simple example but be aware that within this function we could complicate the logic as much as we need:
+
+```php
+<?php
+
+namespace App\Providers;
+
+use Illuminate\Support\Facades\Response;
+use Illuminate\Support\ServiceProvider;
+
+class AppServiceProvider extends ServiceProvider
+{
+    /**
+     * Bootstrap any application services.
+     *
+     * @return void
+     */
+    public function boot()
+    {
+        Response::macro('unavailable', function (string $message) {
+            return Response::make($message, Response::HTTP_SERVICE_UNAVAILABLE);
+        });
+    }
+}
+```
+
+And we would use it as:
+
+```php
+//..
+if(!$download) {
+    return response()->unavailable("The download service is unavailable");
+}
+
+//..
+```
+
+And not to make it too long I'll leave it here, I still have many more but it will be better to save them for a second part.
+
+I hope you liked the feedback and do not hesitate to question the proposed solutions, nothing is written in stone.

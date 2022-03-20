@@ -3,7 +3,7 @@ title: 'Código que he visto en entrevistas reales de PHP'
 publishedAt: '2022-03-18'
 summary: 'Os comparto algunos trozos de código que he visto en entrevistas reales en las que he participado y analizarlos en detalle'
 image: '/static/images/all-start-here/og.png'
-categories: 'laravel,PHP'
+categories: 'laravel,php'
 language: 'es'
 ---
 
@@ -15,13 +15,31 @@ He podido detectar algunos patrones que se repiten y he decidido compartir un fe
 **DISCLAIMER:** Las soluciones propuestas son muy básicas y te darás cuenta de que si las analizas detenidamente se te ocurren mejores maneras de seguir improvisando el código, es también lo que quiero conseguir, que no tomes este artículo como
 la fuente de la verdad, prefiero incitarte a la reflexión y que tu también, como lector, puedas confiar en tu conocimiento y experiencia para llegar a mejores soluciones.
 
-# Funciones estáticas en controladores HTTP
+- [Funciones estaticas en controladores HTTP](#funciones-estaticas-en-controladores-http)
+  - [Ejemplo de codigo real](#ejemplo-de-codigo-real)
+  - [Solucion propuesta](#solucion-propuesta)
+    - [Beneficios](#benefits)
+- [TODOs](#todos)
+- [Rutas mal organizadas](#rutas-mal-organizadas)
+  - [Solucion propuesta](#solucion-propuesta)
+    - [Beneficios](#benefits)
+- [No usar el framework de Laravel a tu favor](#no-usar-el-framework-de-laravel-a-tu-favor)
+- [Codigo despues de un return](#codigo-despues-de-un-return)
+- [Funciones que se crean sin darle una segunda revision](#funciones-que-se-crean-sin-darle-una-segunda-revision)
+  - [Solucion propuesta](#solucion-propuesta)
+- [No hay tests de ningun tipo](#no-hay-tests-de-ningun-tipo)
+- [Clases que reciben sus propias constantes y otras confusiones](#clases-que-reciben-sus-propias-constantes-y-otras-confusiones)
+  - [Solucion propuesta](#solucion-propuesta)
+
+---
+
+# Funciones estaticas en controladores HTTP
 
 Los controladores estan diseñados para recibir un input y devolver un output. En la mayoría de ocasiones los utilizaremos para recibir request desde el exterior hacia nuestro servidor y devolver una respuesta.
 
 Aunque no hay nada en el mundo de la programación que nos impida crear funciones estáticas en un controlador, no es una práctica recomendable ya que no queremos reutilizar funciones del controlador en otros lugares de nuestra aplicación.
 
-## Ejemplo de código real
+## Ejemplo de codigo real
 
 ```php:CyclistController.php
 class CyclistController extends Controller
@@ -41,7 +59,7 @@ class CyclistController extends Controller
 Esta función no recibe ningún parámetro por lo que es confuso a la hora de entrar a leer un controlador, normalmente esperamos al menos un objeto Request. Una cosa tenemos seguro,
 una ruta web o api no estará enlazada a este metodo.
 
-En su lugar, estaba en un comando custom de Laravel
+En su lugar, estaba en un comando custom de Laravel:
 
 ```php:DailyPDFCertificatesCommand.php
 //...
@@ -54,7 +72,7 @@ public function handle()
 
 Es cierto que pensó en reusabilidad del código pero estuvo mal orientado contruir esa lógica en un controlador.
 
-## Solución propuesta
+## Solucion propuesta
 
 - Renombrar el método a camel case
 - Recibir identificadores de ciclistas por Custom Request
@@ -153,7 +171,7 @@ https://riders.com/rider/190
 https://riders.com/rider/manuel-lopez
 ```
 
-## Solución propuesta
+## Solucion propuesta
 
 ```php: web.php
 Route::prefix('riders', function(){
@@ -176,6 +194,8 @@ Route::prefix('riders', function(){
 ---
 
 # No usar el framework de Laravel a tu favor
+
+Unos pocos ejemplos que se repiten bastante en las pruebas:
 
 ```php
 Rider::where('id', $id)->first();
@@ -201,9 +221,11 @@ date("Y-m-d H:i:s", strtotime('now'))
 now();
 ```
 
+Estoy seguro de que se me escapan algunas mas pero espero que entiendas la idea.
+
 ---
 
-# Código despues de un return
+# Codigo despues de un return
 
 Este no necesita mucha explicación, no lo hagáis en vuestras casas:
 
@@ -262,7 +284,7 @@ Podemos identificar que:
     }
 ```
 
-## Solución propuesta
+## Solucion propuesta
 
 - Crear una única función
 - Usar un[ Data Transfer Object](https://github.com/spatie/data-transfer-object) para el parámetro logData, tenemos información del contenido y conseguimos autocompletado en nuestro IDE
@@ -283,12 +305,85 @@ Podemos identificar que:
 
 ---
 
-# No hay tests de ningún tipo
+# No hay tests de ningun tipo
 
 Esto es un tema polémico pero entendemos que en las pruebas técnicas usan su tiempo libre y se concentran en terminar la mayor cantidad de funcionalidades posibles,
 siempre aclaramos en nuestro proceso que preferimos que completen menos funcionalidades pero que esten testeadas, al menos un intento. Ya tendremos la sesión de pair programming para añadir nuevas o mejorar las ya existentes.
 
-Los tests son importantes, y a medida que uno avanza como programador se da cuenta de que sin tener una buena suite de tests (Unitarios, integración, End to end...) no se puede ir tranquilo a producción y acabamos arreglando bugs que se podían haber evitado
+Los tests son importantes, y a medida que uno avanza como programador se da cuenta de que sin tener una buena suite de tests _(Unitarios, integración, End to end...)_ no se puede ir tranquilo a producción y acabamos arreglando bugs que se podían haber evitado
 con los tests apropiados. No sera la primera vez ni la última que haya repensado como realizar la funcionalidad mientras creaba el test o descubría algun bug pensando que mis tests iban a pasar correctamente.
 
 [Laravel](https://laravel.com/docs/9.x/testing#main-content) nos proporciona una buena cantidad de assert y abstracciones encima de PHPunit para hacer nuestra vida mas fácil, usenla a vuestro favor.
+
+# Clases que reciben sus propias constantes y otras confusiones
+
+Es algo que hemos detectado también y creemos que falla porque no hay un reflexión anterior antes de el porque necesito esta clase y como la voy a utilizar en mi aplicación, he aquí un ejemplo:
+
+```php
+   if($download){
+            return $this->apiResponseService->getResponse(
+                $this->apiResponseService::_SUCCESS_STATUS_CODE,
+                "File successfully saved",
+                [],
+                200
+            );
+        }
+        return $this->apiResponseService->getResponse(
+            $this->apiResponseService::_SUCCESS_STATUS_CODE,
+            "An error occurred during the file download",
+            [],
+            400
+        );
+```
+
+Podemos observar que es un poco confuso al leerlo porque aunque solo la primera es una respuesta exitosa, la segunda también recibe un código de estado 'SUCCESS' ya existe
+como constante de si misma.
+
+La intención fue correcta, creo una clase que será inyectada como servicio para reutilizar pero a la hora de usarla es cuando parece que trae mas problemas que beneficios.
+
+## Solucion propuesta
+
+Yo no soy partidario de crear un servicio para las respuestas HTTP de una Rest API de primeras, creo que empezaría modificando la macro de la clase **[Response](https://laravel.com/docs/9.x/responses#response-macros)** que ya el propio framework me provee.
+
+Si necesitará una complejidad adicional entonces ya discutiríamos si creamos un trait con funciones adicionales para usar en los controladores o cualquier otro camino que tome con el equipo de desarrollo.
+
+A continuación un ejemplo muy sencillo pero se consciente de que dentro de esta función podríamos complicar la lógica todo lo que necesitemos:
+
+```php
+<?php
+
+namespace App\Providers;
+
+use Illuminate\Support\Facades\Response;
+use Illuminate\Support\ServiceProvider;
+
+class AppServiceProvider extends ServiceProvider
+{
+    /**
+     * Bootstrap any application services.
+     *
+     * @return void
+     */
+    public function boot()
+    {
+        Response::macro('unavailable', function (string $message) {
+            return Response::make($message, Response::HTTP_SERVICE_UNAVAILABLE);
+        });
+    }
+}
+```
+
+Y lo usaríamos como:
+
+```php
+//..
+if(!$download) {
+    return response()->unavailable("The download service is unavailable");
+}
+
+//..
+```
+
+Y para no hacerlo muy largo lo voy dejando por aquí, aún me quedan muchas mas pero será mejor guardarlas para una segunda parte.
+
+Espero que te haya gustado el feedback y no dudes en cuestionar las soluciones propuestas, nada está escrito en piedra.
