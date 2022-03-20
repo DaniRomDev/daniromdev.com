@@ -24,6 +24,7 @@ _El repositorio está pensado para Laravel pero nada te impide servir otro tipo 
 - Levantar, parar o añadir nuevos contenedores es tan fácil como lanzar simples comandos de terminal.
 - Puedes separar tu build dependiendo del target (development, staging, production ...)
 - Con Docker-Compose la configuración y manejo de tus contenedores es más fácil que nunca
+- No mas conflictos con permisos, crear archivos desde tu host o dentro del contenedor se asignan al usuario correcto
 
 ## Contras
 
@@ -55,8 +56,9 @@ CURRENT_DIR := $(dir $(abspath $(lastword $(MAKEFILE_LIST))))
 SHELL=/bin/bash
 VERSION=${shell cat VERSION}
 DOMAIN :=laravel.local
-PROJECT_FOLDER :=src
-NGINX_CERTS_PATH :=${CURRENT_DIR}services/nginx/certs
+PROJECT_FOLDER :=${CURRENT_DIR}src
+DOCKER_PATH :=${CURRENT_DIR}docker
+NGINX_CERTS_PATH :=${DOCKER_PATH}/nginx/certs
 
 #DEFAULT BEHAVIOR
 all:build

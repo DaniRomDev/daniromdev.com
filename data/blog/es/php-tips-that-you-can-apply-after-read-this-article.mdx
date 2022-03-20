@@ -1,0 +1,196 @@
+---
+title: 'Tips con PHP que puedes aplicar despues de leer este artículo'
+publishedAt: '2022-03-18'
+summary: 'Situaciones reales que te puedes encontrar en tu trabajo como programador en las que te propongo una alternativa mejor en base a mi experiencia'
+image: '/static/images/all-start-here/og.png'
+categories: 'PHP'
+language: 'es'
+---
+
+Situaciones reales que te puedes encontrar en tu trabajo como programador en las que te propongo una alternativa mejor en base a mi experiencia con PHP.
+
+# Simple lookup table para condicionales extensos
+
+A modo de ritual, parece que todos los programadores en algún punto de nuestra carrera tenemos que encontrarnos con estas estructuras condicionales gigantes y al final terminas leyendo mas palabras de las que necesitas para entender todo el contexto, he aquí un ejemplo muy simplificado:
+
+### If condicional extenso
+
+```php
+function scopesBasedOnRole(string $role): array
+{
+    if ($role === 'admin') {
+        return ['read', 'create', 'edit', 'delete', 'settings', 'emails', 'permissions'];
+    } else if ($role === 'editor') {
+        return ['read', 'create', 'edit'];
+    } else if ($role === 'employee') {
+        return ['read', 'edit', 'settings', 'emails'];
+    } else if ($role === 'external') {
+        return ['read', 'emails'];
+    } else if ($role === 'internship') {
+        return ['read', 'edit', 'emails'];
+    } else {
+        return ['read'];
+    }
+}
+```
+
+Podemos experimentarlo nosotros mismos a medida que vamos leyendo hacia abajo la palabras **else if** y **return** se juntan e impiden leer de forma fluida que scope estamos retornando, un esfuerzo extra para nuestro cerebro.
+
+### Switch case
+
+Primera solución que suele venir a nuestra mente es refactorizar este código por un switch-case que nos permite categorizar de una forma mas limpia un condicional extenso:
+
+```php
+function scopesBasedOnRole(string $role): array
+{
+    switch ($role) {
+        case 'admin':
+            return ['read', 'create', 'edit', 'delete', 'settings', 'emails', 'permissions'];
+        case 'editor':
+            return ['read', 'create', 'edit'];
+        case 'employee':
+            return ['read', 'edit', 'settings', 'emails'];
+        case 'external':
+            return ['read', 'emails'];
+        case 'internship':
+            return ['read', 'edit', 'emails'];
+        default:
+            return ['read'];
+    }
+}
+```
+
+### Simple lookup table
+
+Mi propuesta es una lookup table accediendo a través de clave -> valor devolviendo un valor por defecto si esta clave no existe en un nuestro array asociativo, poniendo en práctica el concepto "Tell, don't ask".
+Si necesitaramos realizar acciones mas complejas que devolver un valor en ese caso nos conviene utilizar mas el [https://refactoring.guru/design-patterns/strategy](Strategy pattern)
+
+```php
+
+function scopesBasedOnRole(string $role): array
+{
+    return [
+        'admin' => ['read', 'create', 'edit', 'delete', 'settings', 'emails', 'permissions'],
+        'editor' => ['read', 'create', 'edit'],
+        'employee' => ['read', 'edit', 'settings', 'emails'],
+        'external' => ['read', 'emails'],
+        'internship' => ['read', 'edit', 'emails']
+    ][$role] ?? ['read'];
+}
+```
+
+Hemos reducido lineas de código y no hay un flujo de preguntas respuestas que entorpece la lectura del código. Como siempre, utiliza esta técnica manteniendo el sentido común y cuestionándote si realmente lo necesitas en tu caso.
+
+# Funciones flecha
+
+Si, PHP tiene funciones flecha desde la versión 7.4 y funcionan de manera similar a las de Javascript, aquí un ejemplo de una función callback normal:
+
+```php
+$superheroes = ['Superman', 'Batman', 'WonderWoman', 'Spiderman', 'Aquaman', 'Captain America'];
+
+$marvel_heroes =  ['Spiderman', 'Captain America'];
+
+$marvel = array_filter($superheroes, function(string $hero) {
+     return in_array($hero, $marvel_heroes); // Undefined variable marvel_heroes
+});
+```
+
+Estas funciones flecha no solo vienen a dejar nuestro código mas limpio en funciones anónimas que tienen una lógica pequeña, estas también nos permiten acceder a las variables del contexto donde se ejecuta.
+Si tu usas esta función en cualquier editor de código con el intérprete de PHP te va saltar el error de **_'undefined variable marvel_heroes'_** ya que el alcance es local y debemos inyectarsela desde fuera.
+
+```php
+//...
+$marvel_heroes =  ['Spiderman', 'Captain America'];
+
+$marvel = array_filter($superheroes, function(string $hero) use($marvel_heroes) {
+     return in_array($hero, $marvel_heroes); // Se lee correctamente
+});
+```
+
+Con una función flecha el alcance de la función es en el propio contexto:
+
+```php
+$marvel_heroes =  ['Spiderman', 'Captain America'];
+
+$marvel = array_filter($superheroes, fn(string $hero) => in_array($hero, $marvel_heroes));
+```
+
+# Value objects
+
+En algunos casos un tipo primitivo como pueden ser un **string** o un **int** no es suficiente para definir el parámetro de una función. Hay una lógica de negocio que pertenece a nuestra aplicación y ese parámetro puede requerir una serie de validaciones o metodos adicionales para usar a través de nuestra aplicación.
+
+```php
+function notifyMonthlyReport(string $mail) {
+    $mail_splitted = explode('@', $value); // Puede llegarnos un texto que no represente un email y darnos error...
+
+    if($mail_splitted[1] === 'company.com') {
+            //Do stuff with the email ...
+    }
+
+    throw new InvalidArgumentException("The email {$email} is not a valid company email");
+
+}
+```
+
+En lugar de definir esa lógica aquí, sabemos que este tipo de email seguramente va a ser reutilizado en otros lugares de la aplicación así que vamos a extraerlo a su propia clase:
+
+```php
+class CompanyEmail
+{
+    const VALID_DOMAIN = 'company.com';
+
+    /**
+     * @param string $value
+     * @throws InvalidArgumentException
+     */
+    public function __construct(private string $value)
+    {
+        if (!$this->validate($value)) {
+            throw new InvalidArgumentException("The argument {$value} is not a valid company email");
+        }
+    }
+
+    public function value(): string
+    {
+        return $this->value;
+    }
+
+    public function domain(string $value): string
+    {
+        $domain = explode('@', $value);
+
+        return array_pop($domain);
+    }
+
+    private function validate(string $value): bool
+    {
+        return filter_var($value, FILTER_VALIDATE_EMAIL) && $this->domain($value) === self::VALID_DOMAIN;
+    }
+```
+
+Ahora la función anterior nos quedaría mucha mas semántica teniendo menos ruido en su interior, ahora podemos concentrar nuestra atención en la lógica de la notificación a enviar y no en la validación de nuestro parámetro:
+
+```php
+function notifyMonthlyReport(CompanyEmail $mail) {
+    //Do stuff with the email ...
+    //Be aware that you can add more funcionality to this parameter
+    $mail->value();
+    $mail->isGmail();
+    //...
+}
+
+notifyMonthlyReport(new CompanyEmail('employee@company.com')); //All ok
+
+//Throws InvalidArgumentException and you can catch the error outside.
+try {
+
+notifyMonthlyReport(new CompanyEmail('editor@anothercompany.com'));
+
+} catch(InvalidArgumentException $error) {
+    //Handle the error from invalid email parameter, logs, notifications, etc.
+}
+```
+
+Esto ha sido todo por hoy, espero que realmente te haya ayudado a interiorizar algunos conceptos a tener en cuenta a la hora de refactorizar nuestro código, nos será de mucha ayuda no a nosotros sino a los futuros desarrolladores que entren en vuestro proyecto o vosotros mismos en el futuro.
+
+Cheers!

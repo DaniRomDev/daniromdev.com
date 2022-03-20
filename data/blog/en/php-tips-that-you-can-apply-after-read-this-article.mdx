@@ -1,0 +1,196 @@
+---
+title: 'Tips with PHP that you can apply after read this article'
+publishedAt: '2022-03-18'
+summary: 'Real situations that you may encounter in your work as a programmer in which I propose a better alternative based on my experience'
+image: '/static/images/all-start-here/og.png'
+categories: 'PHP'
+language: 'en'
+---
+
+Real situations that you may encounter in your work as a programmer in which I propose a better alternative based on my experience with PHP.
+
+# Simple lookup table for long conditionals
+
+As a ritual, it seems that all programmers at some point in their career have to encounter these giant conditional structures and in the end you end up reading more words than you need to understand the whole context, here is a very simplified example:
+
+### If extended conditional
+
+```php
+function scopesBasedOnRole(string $role): array
+{
+    if ($role === 'admin') {
+        return ['read', 'create', 'edit', 'delete', 'settings', 'emails', 'permissions'];
+    } else if ($role === 'editor') {
+        return ['read', 'create', 'edit'];
+    } else if ($role === 'employee') {
+        return ['read', 'edit', 'settings', 'emails'];
+    } else if ($role === 'external') {
+        return ['read', 'emails'];
+    } else if ($role === 'internship') {
+        return ['read', 'edit', 'emails'];
+    } else {
+        return ['read'];
+    }
+}
+```
+
+We can experience it ourselves as we read downwards the words **else if** and **return** come together and prevent us from reading fluently which scope we are returning, an extra effort for our brain.
+
+### Switch case
+
+First solution that usually comes to our mind is to refactor this code by a switch-case that allows us to categorize in a cleaner way a large conditional:
+
+```php
+function scopesBasedOnRole(string $role): array
+{
+    switch ($role) {
+        case 'admin':
+            return ['read', 'create', 'edit', 'delete', 'settings', 'emails', 'permissions'];
+        case 'editor':
+            return ['read', 'create', 'edit'];
+        case 'employee':
+            return ['read', 'edit', 'settings', 'emails'];
+        case 'external':
+            return ['read', 'emails'];
+        case 'internship':
+            return ['read', 'edit', 'emails'];
+        default:
+            return ['read'];
+    }
+}
+```
+
+### Simple lookup table
+
+My proposal is a lookup table accessing through key -> value returning a default value if this key does not exist in our associative array, putting in practice the concept "Tell, don't ask".
+If we need to perform more complex actions than returning a value in that case we should use more the [https://refactoring.guru/design-patterns/strategy](Strategy pattern)
+
+```php
+
+function scopesBasedOnRole(string $role): array
+{
+    return [
+        'admin' => ['read', 'create', 'edit', 'delete', 'settings', 'emails', 'permissions'],
+        'editor' => ['read', 'create', 'edit'],
+        'employee' => ['read', 'edit', 'settings', 'emails'],
+        'external' => ['read', 'emails'],
+        'internship' => ['read', 'edit', 'emails']
+    ][$role] ?? ['read'];
+}
+```
+
+We have reduced lines of code and there is no flow of questions and answers that hinder the reading of the code. As always, use this technique keeping common sense and questioning if you really need it in your case.
+
+# Arrow functions
+
+Yes, PHP has arrow functions since version 7.4 and they work similarly to Javascript, here is an example of a normal callback function:
+
+```php
+$superheroes = ['Superman', 'Batman', 'WonderWoman', 'Spiderman', 'Aquaman', 'Captain America'];
+
+$marvel_heroes =  ['Spiderman', 'Captain America'];
+
+$marvel = array_filter($superheroes, function(string $hero) {
+     return in_array($hero, $marvel_heroes); // Undefined variable marvel_heroes
+});
+```
+
+These arrow functions not only come to leave our code cleaner in anonymous functions that have a small logic, these also allow us to access the variables of the context where it is executed.
+If you use this function in any code editor with the PHP interpreter you will get the error **_'undefined variable marvel_heroes'_** because the scope is local and we must inject it from outside.
+
+```php
+//...
+$marvel_heroes =  ['Spiderman', 'Captain America'];
+
+$marvel = array_filter($superheroes, function(string $hero) use($marvel_heroes) {
+     return in_array($hero, $marvel_heroes); //Can access marvel heroes variable
+});
+```
+
+With an arrow function the scope of the function is in the context itself:
+
+```php
+$marvel_heroes =  ['Spiderman', 'Captain America'];
+
+$marvel = array_filter($superheroes, fn(string $hero) => in_array($hero, $marvel_heroes));
+```
+
+# Value objects
+
+In some cases a primitive type such as a **string** or an **int** is not sufficient to define the parameter of a function. There is business logic that pertains to our application and that parameter may require a series of additional validations or methods to use throughout our application.
+
+```php
+function notifyMonthlyReport(string $mail) {
+    $mail_splitted = explode('@', $value); //Can arrive a simple string that is not necessarily an email
+
+    if($mail_splitted[1] === 'company.com') {
+            //Do stuff with the email ...
+    }
+
+    throw new InvalidArgumentException("The email {$email} is not a valid company email");
+
+}
+```
+
+Instead of defining that logic here, we know that this type of email is likely to be reused elsewhere in the application so let's extract it to its own class:
+
+```php
+class CompanyEmail
+{
+    const VALID_DOMAIN = 'company.com';
+
+    /**
+     * @param string $value
+     * @throws InvalidArgumentException
+     */
+    public function __construct(private string $value)
+    {
+        if (!$this->validate($value)) {
+            throw new InvalidArgumentException("The argument {$value} is not a valid company email");
+        }
+    }
+
+    public function value(): string
+    {
+        return $this->value;
+    }
+
+    public function domain(string $value): string
+    {
+        $domain = explode('@', $value);
+
+        return array_pop($domain);
+    }
+
+    private function validate(string $value): bool
+    {
+        return filter_var($value, FILTER_VALIDATE_EMAIL) && $this->domain($value) === self::VALID_DOMAIN;
+    }
+```
+
+Now the previous function would be much more semantic having less noise inside, now we can focus our attention on the logic of the notification to send and not on the validation of our parameter:
+
+```php
+function notifyMonthlyReport(CompanyEmail $mail) {
+    //Do stuff with the email ...
+    //Be aware that you can add more funcionality to this parameter
+    $mail->value();
+    $mail->isGmail();
+    //...
+}
+
+notifyMonthlyReport(new CompanyEmail('employee@company.com')); //All ok
+
+//Throws InvalidArgumentException and you can catch the error outside.
+try {
+
+notifyMonthlyReport(new CompanyEmail('editor@anothercompany.com'));
+
+} catch(InvalidArgumentException $error) {
+    //Handle the error from invalid email parameter, logs, notifications, etc.
+}
+```
+
+That's all for today, I hope it has really helped you to internalize some concepts to take into account when refactoring our code, it will be very helpful not only to us but to future developers who enter your project or yourselves in the future.
+
+Cheers!
