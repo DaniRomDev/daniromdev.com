@@ -15,7 +15,7 @@ const SelectLocale: React.FC = () => {
 
   return (
     <select
-      className="max-w-sm mr-2 text-gray-900 bg-white border border-gray-200 rounded-md dark:border-gray-900 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800 dark:text-gray-100"
+      className="max-w-sm mr-2 text-white border border-gray-200 rounded-md dark:border-gray-900 focus:ring-blue-500 focus:border-blue-500 bg-gray-800 dark:text-gray-100"
       onChange={changeLanguage}
       defaultValue={router.locale}
     >

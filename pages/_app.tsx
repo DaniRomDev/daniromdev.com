@@ -13,8 +13,7 @@ function MyApp({ Component, pageProps }: AppProps) {
     <ThemeProvider attribute="class">
       <NextNProgress options={{ easing: 'ease', speed: 500 }} />
       <MagazineLayout>
-        content
-        {/* <Component {...pageProps} /> */}
+        <Component {...pageProps} />
       </MagazineLayout>
     </ThemeProvider>
   )

@@ -11,6 +11,7 @@ import { H3 } from 'components/Shared/Titles'
 import { allBlogPosts, sortBlogPosts } from 'services/blog'
 import BlogCardSimple from 'components/Blog/BlogCardSimple'
 import { Blog } from '.contentlayer/types'
+import Announcement from 'components/Common/Announcement'
 
 const Home: NextPage<InferGetStaticPropsType<typeof getStaticProps>> = ({
   posts
@@ -19,11 +20,14 @@ const Home: NextPage<InferGetStaticPropsType<typeof getStaticProps>> = ({
 
   return (
     <>
-      <Profile />
-      <H3>{translate('Most viewed posts')}</H3>
-      {posts.map((post: Blog) => (
-        <BlogCardSimple key={post.slug} post={post} />
-      ))}
+      <Announcement>
+        <div className="ml-2 text-xs text-gray-200">
+          <span className="underline text-gray-200 font-bold">
+            #StandWithUkraine
+          </span>{' '}
+          🙏
+        </div>
+      </Announcement>
     </>
   )
 }
