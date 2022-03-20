@@ -9,6 +9,15 @@ language: 'es'
 
 Situaciones reales que te puedes encontrar en tu trabajo como programador en las que te propongo una alternativa mejor en base a mi experiencia con PHP.
 
+- [Simple lookup table para condicionales extensos](#simple-lookup-table-para-conditionales-extensos)
+
+  - [If condicional extenso](#if-condicional-extenso)
+  - [Swith case](#switch-case)
+  - [Simple lookup table](#simple-lookup-table)
+
+- [Funciones flecha](#funciones-flecha)
+- [Value objects](#value-objects)
+
 # Simple lookup table para condicionales extensos
 
 A modo de ritual, parece que todos los programadores en algún punto de nuestra carrera tenemos que encontrarnos con estas estructuras condicionales gigantes y al final terminas leyendo mas palabras de las que necesitas para entender todo el contexto, he aquí un ejemplo muy simplificado:
@@ -62,8 +71,8 @@ function scopesBasedOnRole(string $role): array
 
 ### Simple lookup table
 
-Mi propuesta es una lookup table accediendo a través de clave -> valor devolviendo un valor por defecto si esta clave no existe en un nuestro array asociativo, poniendo en práctica el concepto "Tell, don't ask".
-Si necesitaramos realizar acciones mas complejas que devolver un valor en ese caso nos conviene utilizar mas el [https://refactoring.guru/design-patterns/strategy](Strategy pattern)
+Mi propuesta es una lookup table accediendo a través de clave -> valor devolviendo un valor por defecto si esta clave no existe en un nuestro array asociativo, poniendo en práctica el concepto ["Tell, don't ask"](https://www.martinfowler.com/bliki/TellDontAsk.html).
+Si necesitaramos realizar acciones mas complejas que devolver un valor en ese caso nos conviene utilizar mas el [Strategy pattern](https://refactoring.guru/design-patterns/strategy)
 
 ```php
 
@@ -191,6 +200,6 @@ notifyMonthlyReport(new CompanyEmail('editor@anothercompany.com'));
 }
 ```
 
-Esto ha sido todo por hoy, espero que realmente te haya ayudado a interiorizar algunos conceptos a tener en cuenta a la hora de refactorizar nuestro código, nos será de mucha ayuda no a nosotros sino a los futuros desarrolladores que entren en vuestro proyecto o vosotros mismos en el futuro.
+Esto ha sido todo por hoy, espero que realmente te haya ayudado a interiorizar algunos conceptos a tener en cuenta a la hora de refactorizar nuestro código, nos será de mucha ayuda no solo a nosotros sino a los futuros desarrolladores que entren en vuestro proyecto.
 
 Cheers!

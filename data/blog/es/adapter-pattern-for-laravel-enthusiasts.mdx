@@ -9,6 +9,20 @@ language: 'es'
 
 Fuente de inspiración para escribir este artículo: [Colin Decarlo - Design Patterns with Laravel](https://www.youtube.com/watch?v=e4ugSgGaCQ0)
 
+- [Patrones de diseño cuando empiezas](#patrones-de-diseño-cuando-empiezas)
+  - [Antes de empezar](#antes-de-empezar)
+  - [Adapter](#adapter)
+    - [Comunicación con servicios de terceros](#comunicacion-con-servicios-de-terceros)
+    - [Beneficios](#beneficios)
+    - [Ejemplo practico con PHP](#ejemplo-practico-con-php)
+    - [Aplicando el patrón Adapter en este caso](#aplicando-el-patron-adapter-en-este-caso)
+    - [Limpiando nuestro controlador utilizando nuestro patrón Adapter](#limpiando-nuestro-controlador-utilizando-nuestro-patron-adapter)
+    - [Conclusión con algunos ejemplos reales](#conclusion-con-algunos-ejemplos-reales)
+      - [Adapter para servicio de facturas con XERO](#adapter-para-servicio-de-facturas-con-xero)
+      - [Adapter para servicio de Locator](#adapter-para-servicio-de-locator)
+
+---
+
 # Patrones de diseño cuando empiezas
 
 Cuando uno empieza en este mundo de la programación a tirar sus primeras líneas de código ni siquiera se plantea una forma mejor de hacer las cosas, estás tan concentrado en aprender la sintaxis del lenguaje de programación y como las piezas se unen entre si para hacer una simple petición HTTP o iterar un array que te olvidas completamente del código limpio.

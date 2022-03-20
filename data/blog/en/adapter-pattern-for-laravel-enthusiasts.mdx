@@ -9,6 +9,20 @@ language: 'en'
 
 Source of inspiration to write this article: [Colin Decarlo - Design Patterns with Laravel](https://www.youtube.com/watch?v=e4ugSgGaCQ0)
 
+- [Design patterns when you start](#design-patterns-when-you-start)
+  - [Before you start](#before-you-start)
+  - [Adapter](#adapter)
+    - [Communication with third party services](#communication-with-third-party-services)
+    - [Benefits](#benefits)
+    - [Practical example with PHP](#practical-example-with-php)
+    - [Applying the Adapter pattern in this case](#applying-the-adapter-pattern-in-this-case)
+    - [Cleaning up our driver using our Adapter pattern](#cleaning-up-our-driver-using-our-adapter-pattern)
+    - [Conclusion with some real examples](#conclusion-with-some-real-examples)
+      - [Adapter for Invoice service with XERO](#adapter-for-invoice-service-with-xero)
+      - [Adapter for Locator service](#adapter-for-locator-service)
+
+---
+
 # Design patterns when you start
 
 When you start in this world of programming to throw out your first lines of code you don't even consider a better way of doing things, you are so focused on learning the syntax of the programming language and how the pieces fit together to make a simple HTTP request or iterate an array that you completely forget about clean code.
