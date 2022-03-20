@@ -1,0 +1,294 @@
+---
+title: 'Código que he visto en entrevistas reales de PHP'
+publishedAt: '2022-03-18'
+summary: 'Os comparto algunos trozos de código que he visto en entrevistas reales en las que he participado y analizarlos en detalle'
+image: '/static/images/all-start-here/og.png'
+categories: 'laravel,PHP'
+language: 'es'
+---
+
+Os comparto algunos trozos de código que he visto en entrevistas reales en las que he participado y analizarlos en detalle.
+Estos últimos meses he participado en varias sesiones de pair programming en el proceso de entrevista que tenemos abierto para entrar a nuestro proyecto.
+
+He podido detectar algunos patrones que se repiten y he decidido compartir un feedback para que mejoréis vuestro código así como algunos conceptos generales a tener en mente cuando vamos a compartir código con otros.
+
+**DISCLAIMER:** Las soluciones propuestas son muy básicas y te darás cuenta de que si las analizas detenidamente se te ocurren mejores maneras de seguir improvisando el código, es también lo que quiero conseguir, que no tomes este artículo como
+la fuente de la verdad, prefiero incitarte a la reflexión y que tu también, como lector, puedas confiar en tu conocimiento y experiencia para llegar a mejores soluciones.
+
+# Funciones estáticas en controladores HTTP
+
+Los controladores estan diseñados para recibir un input y devolver un output. En la mayoría de ocasiones los utilizaremos para recibir request desde el exterior hacia nuestro servidor y devolver una respuesta.
+
+Aunque no hay nada en el mundo de la programación que nos impida crear funciones estáticas en un controlador, no es una práctica recomendable ya que no queremos reutilizar funciones del controlador en otros lugares de nuestra aplicación.
+
+## Ejemplo de código real
+
+```php:CyclistController.php
+class CyclistController extends Controller
+{
+    public static function generate_cyclist_certificate()
+    {
+        $cyclists = Cyclist::whereDate('created_at', '=', Carbon::today()->toDateString())->get();
+        $pdf = PDF::loadView('cyclists.certificate', compact('cyclists', $cyclists));
+
+        return $pdf->stream();
+    }
+
+  //...
+}
+```
+
+Esta función no recibe ningún parámetro por lo que es confuso a la hora de entrar a leer un controlador, normalmente esperamos al menos un objeto Request. Una cosa tenemos seguro,
+una ruta web o api no estará enlazada a este metodo.
+
+En su lugar, estaba en un comando custom de Laravel
+
+```php:DailyPDFCertificatesCommand.php
+//...
+public function handle()
+   {
+       CyclistController::generate_cyclist_certificate();
+       echo 'PDF generated successfully.';
+   }
+```
+
+Es cierto que pensó en reusabilidad del código pero estuvo mal orientado contruir esa lógica en un controlador.
+
+## Solución propuesta
+
+- Renombrar el método a camel case
+- Recibir identificadores de ciclistas por Custom Request
+- Realizar únicamente lo que el método menciona
+
+```php:CyclistCertificateRequest
+// php artisan make:request CyclistCertificateRequest
+
+ class CyclistCertificateRequest extends FormRequest {
+
+  public function authorize(): bool
+    {
+        return true;
+    }
+
+    public function rules(): array
+    {
+        return [
+            'cyclists' => 'required|exists:cyclists',
+        ];
+    }
+
+ }
+```
+
+```php:CyclistController.php
+class CyclistController extends Controller
+{
+    public function generateCyclistCertificate(CyclistCertificateRequest $request)
+    {
+        $pdf = PDF::loadView('cyclists.certificate', compact('cyclists', Cyclist::find($request->cyclists)));
+
+        return $pdf->stream();
+    }
+
+  //...
+}
+```
+
+### Beneficios:
+
+- Podemos recibir información de ciclistas desde cualquier output externo y tener mas control de la validación de los datos, filtros, etc.
+- El método solo se encarga de generar los certificados de ciclistas como el método nombra.
+
+Por supuesto que se puede seguir mejorando este código como por ejemplo creando scopes en el módelo, un servicio de generación de PDFs para inyectarlo como dependencia en nuestras clases y un largo etc.
+
+Lo importante es el concepto básico y como podemos seguir construyendo a partir de aquí, antes de crear un método estático en un controlador pensad si hay una alternativa mejor.
+
+---
+
+# TODOs
+
+Hemos visto que hay en la mayoría de las pruebas técnicas hay comentarios con un TODO en ciertas partes del código y en mi punto de vista es preferible terminar algo en lugar de dejarlo pendiente.
+
+```php
+//..
+ public function index()
+    {
+        // TODO: implement a return of the actual index blade view
+        return 'Please select the CSV file to upload.';
+    }
+
+/..
+```
+
+Somos humanos y cometemos errores esta claro, se nos puede olvidar despues de estar trabajando en otra parte de la aplicación y olvidarnos completamente de volver a ese lugar.
+
+Nunca ha sido una razón de peso para rechazar a un candidato pero si puedes evitarlo, evitalo, ya que me da a entender que tienes falta de organización a la hora de empezar a codificar.
+
+---
+
+# Rutas mal organizadas
+
+El framework Laravel nos da múltiples formas de estructurar el routing de nuestra app, como agrupación, prefijos, middlewares, etc.
+
+```php:web.php
+Route::get('insertRiders', [CsvReaderController::class, 'manageCSV']);
+Route::get('riders', [RidersController::class, 'getRiders']);
+Route::get('ridersPDF', [RidersController::class, 'getRidersPDF']);
+Route::get('rider/{id}', [RidersController::class, 'getRider']);
+Route::get('riderPDF/{id}', [RidersController::class, 'getRiderPDF']);
+```
+
+En este ejemplo vemos como solo utiliza el verbo GET incluso para hacer operaciones de inserción pero lo mas perjudicial aquí es la forma
+de nombrar las rutas, mas información en [Resource naming](https://restfulapi.net/resource-naming/)
+
+Es cierto que el archivo **web.php** de Laravel no es para crear Restful APIs pero igualmente en mi opinión, deberíamos traernos estos conceptos a la hora de nombrar rutas web con ciertos matices
+ya que tenemos que tener en cuenta el SEO y la UX a la hora de crear urls amigables para el usuario.
+
+No es lo mismo para la web:
+
+```php
+// 190 no nos da ningun tipo de informacion
+https://riders.com/rider/190
+// Accedemos a traves del nombre por lo que se hace muy facil compartirla si es necesario
+https://riders.com/rider/manuel-lopez
+```
+
+## Solución propuesta
+
+```php: web.php
+Route::prefix('riders', function(){
+    Route::get('/', [RidersController::class, 'index'])->name('riders.list');
+    Route::get('{id}', [RidersController::class, 'show'])->name('riders.detail');
+    Route::get('{id}/pdf', [RidersController::class, 'generateRiderLicense'])->name('rider.license');
+
+    Route::post('/', [RidersController::class, 'store'])->name('riders.store');
+});
+
+```
+
+### Beneficios
+
+- Las rutas de riders estan localizadas en un solo lugar
+- Se usan los verbos HTTP para clarificar la acción que realizamos en la ruta
+- Seguimos una estructura estándar para nuestro recurso riders
+- Podemos acceder a nuestras rutas a través del name, e.g: route('rider.license') por lo que si modificamos la url, nuestro nombre de ruta siempre será el mismo.
+
+---
+
+# No usar el framework de Laravel a tu favor
+
+```php
+Rider::where('id', $id)->first();
+
+// Better
+Rider::find($id);
+// or if we need to catch error for ModelNotFound
+Rider::findOrFail($id);
+```
+
+```php
+// The double slash only works on windows system (\\riders.csv) and throws error on unix ones
+storage_path() . '\\riders.csv'
+
+//Let handle the Storage facade the cross compatibility on filesystems
+Storage::get('riders.csv')
+```
+
+```php
+date("Y-m-d H:i:s", strtotime('now'))
+
+//Better use the Carbon helper
+now();
+```
+
+---
+
+# Código despues de un return
+
+Este no necesita mucha explicación, no lo hagáis en vuestras casas:
+
+```php
+//...
+public function showLicense(Request $request, string $id){
+		if (array_key_exists($id, User::tmpUsers)) {
+			$pathFile = storage_path('app\licenses\\'.User::tmpUsers[$id]['pdfLicense']);
+			if (file_exists($pathFile)) {
+				return response()->file($pathFile);
+			}
+		}
+
+		return view('welcome');
+		error_log(User::tmpUsers[$id]['pdfLicense']);
+		error_log(array_key_exists($id, User::tmpUsers));
+	}
+```
+
+# Funciones que se crean sin darle una segunda revisión
+
+Podemos identificar que:
+
+- El único parámetro que cambia es el rol del usuario
+- No sabemos que tipo es ni que contiene $logData en esta función
+- Se hacen llamadas extra a bases de datos
+- Se hace un return sin nada
+
+```php
+// ...
+    public static function notifyAdmins($logData)
+    {
+        $admins = User::where('role', 'admin')->get();
+
+        foreach($admins as $admin)
+        {
+            $admin = User::find($admin->id);
+            $admin->notify(new RiderRegisterLog($logData));
+        }
+        return;
+    }
+
+    /**
+     * Sends a log mail to partners
+     */
+    public static function notifyPartners($logData)
+    {
+        $partners = User::where('role', 'partner')->get();
+
+        foreach($partners as $partner)
+        {
+            $partner = User::find($partner->id);
+            $partner->notify(new RiderRegisterLog($logData));
+        }
+        return;
+    }
+```
+
+## Solución propuesta
+
+- Crear una única función
+- Usar un[ Data Transfer Object](https://github.com/spatie/data-transfer-object) para el parámetro logData, tenemos información del contenido y conseguimos autocompletado en nuestro IDE
+- Pasar el role como parámetro a la función _(podría incluso ser enum para mayor restricción)_
+- Eliminar la llamada extra a base de datos, ya tenemos el modelo usuario.
+- Iterar directamente en nuestra query
+- Tipar la función como void y eliminar el return vacío
+
+```php
+//..
+ public static function notifyRiders(LogDataDTO $dto, string $role): void
+    {
+         User::where('role', $role)
+            ->get()
+            ->each(fn (User $user) => $user->notify(new RiderRegisterLog($dto)));
+    }
+```
+
+---
+
+# No hay tests de ningún tipo
+
+Esto es un tema polémico pero entendemos que en las pruebas técnicas usan su tiempo libre y se concentran en terminar la mayor cantidad de funcionalidades posibles,
+siempre aclaramos en nuestro proceso que preferimos que completen menos funcionalidades pero que esten testeadas, al menos un intento. Ya tendremos la sesión de pair programming para añadir nuevas o mejorar las ya existentes.
+
+Los tests son importantes, y a medida que uno avanza como programador se da cuenta de que sin tener una buena suite de tests (Unitarios, integración, End to end...) no se puede ir tranquilo a producción y acabamos arreglando bugs que se podían haber evitado
+con los tests apropiados. No sera la primera vez ni la última que haya repensado como realizar la funcionalidad mientras creaba el test o descubría algun bug pensando que mis tests iban a pasar correctamente.
+
+[Laravel](https://laravel.com/docs/9.x/testing#main-content) nos proporciona una buena cantidad de assert y abstracciones encima de PHPunit para hacer nuestra vida mas fácil, usenla a vuestro favor.
