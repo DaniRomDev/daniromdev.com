@@ -1,5 +1,5 @@
 import { Blog } from '.contentlayer/types'
-import { Badge } from 'components/Common/Badge'
+import { Badge } from 'components/Common/HotTitle'
 import { BlogHotTopicCard } from './BlogHotTopicCard'
 
 const BlogHotTopicList: React.FC<{ posts: Blog[] }> = ({ posts }) => (

@@ -33,7 +33,8 @@ const Blog = defineDocumentType(() => ({
         summary: { type: 'string', required: true },
         image: { type: 'string', required: true },
         categories: { type: 'string', required: true },
-        language: { type: 'string', required: true, default: 'es' }
+        language: { type: 'string', required: true, default: 'es' },
+        views: { type: 'number', required: false, default: 0 }
     },
     computedFields
 }));

@@ -13,8 +13,10 @@ import BlogCardSimple from 'components/Blog/BlogCardSimple'
 import { Blog } from '.contentlayer/types'
 import Announcement from 'components/Common/Announcement'
 import BlogHotTopicList from 'components/Blog/BlogHotTopicList'
-import { Badge } from 'components/Common/Badge'
+import { HotTitle } from 'components/Common/HotTitle'
 import { BlogMostViewedPostsLists } from 'components/Blog/BlogMostViewedPostsList'
+import { BigDivider } from 'components/Common/BigDivider'
+import { BlogCardExpandedList } from 'components/Blog/BlogCardExpandedList'
 
 const Home: NextPage<InferGetStaticPropsType<typeof getStaticProps>> = ({
   posts
@@ -42,12 +44,22 @@ const Home: NextPage<InferGetStaticPropsType<typeof getStaticProps>> = ({
 
           <div className="sm:col-span-12 sm:mt-6 md:mt-0 xl:mt-0 lg:col-span-3 xl:col-span-3 lg:block">
             <div className="space-x-5">
-              <Badge> More viewed posts</Badge>
+              <HotTitle> More viewed posts</HotTitle>
             </div>
 
             <div className="flex flex-col lg:space-y-4 sm:space-y-6 xl:space-y-6 sm:mt-7 lg:mt-0 xl:mt-7">
               <BlogMostViewedPostsLists posts={posts} />
             </div>
+          </div>
+        </div>
+      </div>
+
+      <BigDivider />
+
+      <div className="py-3 xs:px-4 sm:px-10">
+        <div className="flex xl:justify-between 2xl:justify-evenly">
+          <div className="w-full max-w-screen-xl mx-auto">
+            <BlogCardExpandedList posts={posts} />
           </div>
         </div>
       </div>
