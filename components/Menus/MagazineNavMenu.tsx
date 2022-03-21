@@ -46,10 +46,10 @@ const MagazineNavMenu: React.FC<{ items: NavigationRoute[] }> = ({
   }
 
   return (
-    <nav className="pt-5 font-serif bg-gray-900">
-      <div className="mx-auto xs:px-4 sm:px-10">
+    <nav className="pt-5 font-serif bg-slate-900">
+      <div className="mx-auto sm:px-4 md:px-10">
         <div className="relative flex items-center justify-between h-16">
-          <div className="flex items-center justify-center flex-1 xs:justify-start sm:justify-start">
+          <div className="flex items-center justify-center flex-1 sm:justify-start">
             <div className="flex items-center flex-shrink-0">
               <Link href="/" passHref>
                 <a>
@@ -114,7 +114,7 @@ const MagazineNavMenu: React.FC<{ items: NavigationRoute[] }> = ({
       </div>
 
       <div className="flex flex-col w-full mt-4">
-        <div className="w-full flex h-0.5 bg-gray-500"></div>
+        <div className="w-full flex h-0.5 bg-gray-800"></div>
       </div>
     </nav>
   )

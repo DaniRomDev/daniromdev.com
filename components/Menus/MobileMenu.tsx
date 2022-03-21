@@ -55,7 +55,7 @@ const MobileMenu: React.FC<{
         <ul
           className={cn(
             styles.menu,
-            'flex flex-col bg-gray-100 dark:bg-gray-900 absolute px-8',
+            'flex flex-col bg-gray-100 dark:bg-gray-800 absolute px-8',
             isMenuRendered && styles.menuRendered
           )}
         >
